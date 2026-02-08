@@ -83,38 +83,6 @@ export default function DemoBDEDashboard() {
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="brutalist-border border-b">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex gap-6">
-            <Link
-              href="/bde/dashboard"
-              className="py-4 border-b-2 border-[#7C3AED] text-white font-medium"
-            >
-              Tableau de bord
-            </Link>
-            <Link
-              href="/projects"
-              className="py-4 border-b-2 border-transparent text-[#A0A0A0] hover:text-white transition-colors"
-            >
-              Mes projets
-            </Link>
-            <Link
-              href="/demo"
-              className="py-4 border-b-2 border-transparent text-[#A0A0A0] hover:text-white transition-colors"
-            >
-              Matériel
-            </Link>
-            <Link
-              href="/messages"
-              className="py-4 border-b-2 border-transparent text-[#A0A0A0] hover:text-white transition-colors"
-            >
-              Messages
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       {/* Contenu principal */}
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Statistiques */}
