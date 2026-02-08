@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getPublishedProjects, ProjectWithProfile } from '@/lib/utils/projects';
 
 export default function DemoProjectsPage() {
+  const router = useRouter();
   const supabase = createClient();
   const [projects, setProjects] = useState<ProjectWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,24 +114,24 @@ export default function DemoProjectsPage() {
     async function loadProjects() {
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user) {
-        setIsDemo(false);
-        const supabaseProjects = await getPublishedProjects(supabase, {
-          type: filters.type,
-          search: '' // Search is handled client-side
-        });
-        setProjects(supabaseProjects || []);
-      } else {
-        // Not authenticated, redirect to login
-        setProjects(mockProjects); // Fallback to demo mode for unauthenticated users
-        setIsDemo(true);
+      if (!user) {
+        // Redirect to login if not authenticated
+        router.push('/login');
+        return;
       }
+
+      setIsDemo(false);
+      const supabaseProjects = await getPublishedProjects(supabase, {
+        type: filters.type,
+        search: '' // Search is handled client-side
+      });
+      setProjects(supabaseProjects || []);
       setLoading(false);
     }
 
     loadProjects();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters.type]); // Only reload when type filter changes
+  }, [filters.type, router]); // Only reload when type filter changes
 
   // Client-side filtering and sorting
   const filteredProjects = projects

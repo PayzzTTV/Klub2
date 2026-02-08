@@ -135,23 +135,23 @@ export default function DemoRentalPage() {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
 
-      if (user) {
-        setIsDemo(false);
-        const items = await getRentalItems(supabase, {
-          category: selectedCategory === 'Tous' ? undefined : selectedCategory as any,
-          availableOnly: true,
-        });
-        setEquipment(items || []);
-      } else {
-        // Not authenticated, use mock data
-        setIsDemo(true);
-        setEquipment(mockEquipment as any);
+      if (!user) {
+        // Redirect to login if not authenticated
+        router.push('/login');
+        return;
       }
+
+      setIsDemo(false);
+      const items = await getRentalItems(supabase, {
+        category: selectedCategory === 'Tous' ? undefined : selectedCategory as any,
+        availableOnly: true,
+      });
+      setEquipment(items || []);
       setLoading(false);
     }
 
     loadEquipment();
-  }, [selectedCategory, supabase]);
+  }, [selectedCategory, supabase, router]);
 
   const filteredEquipment = equipment.filter((item) => {
     const matchesSearch =
