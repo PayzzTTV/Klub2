@@ -325,7 +325,13 @@ export default function RentalDetailPage() {
                 </div>
               </div>
 
-              {equipment.available ? (
+              {currentUserId === equipment.owner_id ? (
+                <div className="brutalist-card p-4 bg-blue-900/20 border-blue-700">
+                  <p className="text-sm text-center">
+                    ℹ️ C'est votre propre équipement. Vous ne pouvez pas le louer.
+                  </p>
+                </div>
+              ) : equipment.available ? (
                 <button
                   onClick={() => setShowBookingForm(!showBookingForm)}
                   className="brutalist-button-primary w-full py-3 text-lg font-bold"
