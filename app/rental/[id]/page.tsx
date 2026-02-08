@@ -88,12 +88,15 @@ export default function RentalDetailPage() {
     loadEquipment();
   }, [supabase, equipmentId, router]);
 
-  // Check for date conflicts with existing rentals
+  // Check for date conflicts with existing rentals (considering quantity)
   const checkDateConflict = (startDate: string, endDate: string): boolean => {
+    if (!equipment) return false;
+
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    return bookedDates.some(rental => {
+    // Count concurrent rentals for the requested dates
+    const concurrentRentals = bookedDates.filter(rental => {
       // Skip cancelled rentals
       if (rental.status === 'cancelled') return false;
 
@@ -103,6 +106,12 @@ export default function RentalDetailPage() {
       // Check if dates overlap
       return (start <= rentalEnd && end >= rentalStart);
     });
+
+    const concurrentCount = concurrentRentals.length;
+    const availableQuantity = equipment.quantity - concurrentCount;
+
+    // No availability if all units are booked
+    return availableQuantity <= 0;
   };
 
   const handleSubmitBooking = async (e: React.FormEvent) => {
@@ -133,10 +142,10 @@ export default function RentalDetailPage() {
       return;
     }
 
-    // Check for date conflicts (CLIENT-SIDE VALIDATION)
+    // Check for date conflicts and quantity availability (CLIENT-SIDE VALIDATION)
     const hasConflict = checkDateConflict(bookingData.startDate, bookingData.endDate);
     if (hasConflict) {
-      alert('❌ Ces dates sont déjà réservées.\n\nVeuillez choisir d\'autres dates disponibles.');
+      alert('❌ Aucune quantité disponible pour ces dates.\n\nVeuillez choisir d\'autres dates ou vérifier le calendrier des disponibilités.');
       return;
     }
 
