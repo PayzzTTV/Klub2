@@ -15,6 +15,9 @@ export default function DemoProjectDetailPage() {
   const [applications, setApplications] = useState<ProjectApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(true);
+  const [userRole, setUserRole] = useState<'BDE' | 'ORGA' | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Mock data - en vrai on ferait un fetch avec l'ID
   const mockProjects: Record<string, any> = {
@@ -106,6 +109,19 @@ export default function DemoProjectDetailPage() {
 
       if (user) {
         setIsDemo(false);
+        setCurrentUserId(user.id);
+
+        // Get user role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          setUserRole(profile.role);
+        }
+
         const [supabaseProject, projectApps] = await Promise.all([
           getProjectById(supabase, projectId),
           getProjectApplications(supabase, projectId),
@@ -114,6 +130,11 @@ export default function DemoProjectDetailPage() {
         if (supabaseProject) {
           setProject(supabaseProject);
           setApplications(projectApps || []);
+
+          // Check if user is the owner
+          if (supabaseProject.bde_id === user.id) {
+            setIsOwner(true);
+          }
         } else {
           // Fallback to mock data if project not found in DB
           setProject(mockProjects[projectId] || null);
@@ -129,6 +150,50 @@ export default function DemoProjectDetailPage() {
     loadProject();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
+
+  const handleAcceptApplication = async (applicationId: string) => {
+    if (!currentUserId) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_applications')
+        .update({ status: 'accepted' })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      // Reload applications
+      const updatedApplications = await getProjectApplications(supabase, projectId);
+      setApplications(updatedApplications);
+
+      alert('✅ Candidature acceptée !');
+    } catch (err) {
+      console.error('Error accepting application:', err);
+      alert('❌ Erreur lors de l\'acceptation');
+    }
+  };
+
+  const handleRejectApplication = async (applicationId: string) => {
+    if (!currentUserId) return;
+
+    try {
+      const { error } = await supabase
+        .from('project_applications')
+        .update({ status: 'rejected' })
+        .eq('id', applicationId);
+
+      if (error) throw error;
+
+      // Reload applications
+      const updatedApplications = await getProjectApplications(supabase, projectId);
+      setApplications(updatedApplications);
+
+      alert('❌ Candidature refusée');
+    } catch (err) {
+      console.error('Error rejecting application:', err);
+      alert('❌ Erreur lors du refus');
+    }
+  };
 
   if (loading) {
     return (
@@ -285,9 +350,34 @@ export default function DemoProjectDetailPage() {
                           >
                             💬 Message
                           </Link>
-                          <button className="brutalist-button-primary px-4 py-2 text-sm">
-                            Accepter
-                          </button>
+                          {/* Show Accept/Reject buttons only if user is owner and status is pending */}
+                          {isOwner && app.status === 'pending' && (
+                            <>
+                              <button
+                                onClick={() => handleAcceptApplication(app.id)}
+                                className="brutalist-button-primary px-4 py-2 text-sm"
+                              >
+                                ✅ Accepter
+                              </button>
+                              <button
+                                onClick={() => handleRejectApplication(app.id)}
+                                className="brutalist-button px-4 py-2 text-sm hover:border-[#FF0055] hover:text-[#FF0055]"
+                              >
+                                ❌ Refuser
+                              </button>
+                            </>
+                          )}
+                          {/* Show status badge if not pending */}
+                          {app.status === 'accepted' && (
+                            <span className="px-4 py-2 bg-[#00FF66]/20 text-[#00FF66] text-sm font-semibold rounded">
+                              ✅ Acceptée
+                            </span>
+                          )}
+                          {app.status === 'rejected' && (
+                            <span className="px-4 py-2 bg-[#FF0055]/20 text-[#FF0055] text-sm font-semibold rounded">
+                              ❌ Refusée
+                            </span>
+                          )}
                           <Link
                             href={`/projects/${projectId}/applications/${app.id}`}
                             className="brutalist-button px-4 py-2 text-sm"
@@ -311,19 +401,21 @@ export default function DemoProjectDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* CTA Card */}
-            <div className="brutalist-card p-6">
-              <h3 className="text-lg font-bold mb-4">Vous êtes intéressé ?</h3>
-              <Link
-                href={`/projects/${projectId}/apply`}
-                className="brutalist-button-primary px-6 py-3 block text-center mb-3"
-              >
-                Candidater maintenant
-              </Link>
-              <p className="text-xs text-[#A0A0A0] text-center">
-                Proposez vos services et votre tarif
-              </p>
-            </div>
+            {/* CTA Card - Only for ORGA */}
+            {userRole === 'ORGA' && (
+              <div className="brutalist-card p-6">
+                <h3 className="text-lg font-bold mb-4">Vous êtes intéressé ?</h3>
+                <Link
+                  href={`/projects/${projectId}/apply`}
+                  className="brutalist-button-primary px-6 py-3 block text-center mb-3"
+                >
+                  Candidater maintenant
+                </Link>
+                <p className="text-xs text-[#A0A0A0] text-center">
+                  Proposez vos services et votre tarif
+                </p>
+              </div>
+            )}
 
             {/* Info Card */}
             <div className="brutalist-card p-6">
