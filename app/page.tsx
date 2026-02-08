@@ -3,42 +3,6 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="min-h-screen bg-[#000000]">
-      {/* Header */}
-      <header className="border-b border-[#1A1A1A]">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tighter">
-            <span className="text-white">K</span>
-            <span className="text-[#7C3AED]">L</span>
-            <span className="text-white">UB</span>
-          </h1>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/demo"
-              className="text-sm text-[#A0A0A0] hover:text-white transition-colors"
-            >
-              Démo
-            </Link>
-            <Link
-              href="/messages"
-              className="text-sm text-[#A0A0A0] hover:text-white transition-colors"
-            >
-              💬 Messages
-            </Link>
-            <Link
-              href="/login"
-              className="text-sm text-[#A0A0A0] hover:text-white transition-colors"
-            >
-              Connexion
-            </Link>
-            <Link
-              href="/signup"
-              className="brutalist-button-primary px-4 py-2 text-sm"
-            >
-              S'inscrire
-            </Link>
-          </div>
-        </div>
-      </header>
 
       <div className="flex items-center justify-center px-4 py-16">
         <main className="max-w-4xl w-full text-center animate-fade-in">

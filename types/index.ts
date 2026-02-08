@@ -16,6 +16,7 @@ export type ProjectType =
 export type ProjectStatus =
   | 'draft'
   | 'published'
+  | 'pending_quotes'
   | 'in_progress'
   | 'completed'
   | 'cancelled';

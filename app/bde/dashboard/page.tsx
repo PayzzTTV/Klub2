@@ -59,27 +59,7 @@ export default function DemoBDEDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#000000]">
-      {/* Header */}
-      <header className="brutalist-border border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/demo">
-            <h1 className="text-2xl font-bold tracking-tighter cursor-pointer">
-              <span className="text-white">K</span>
-              <span className="text-[#7C3AED]">L</span>
-              <span className="text-white">UB</span>
-              <span className="text-sm text-[#A0A0A0] ml-4">Démo BDE</span>
-            </h1>
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-[#A0A0A0]">{profile?.organization_name || 'BDE'}</span>
-            <div className="w-10 h-10 bg-[#7C3AED] rounded flex items-center justify-center font-bold">
-              {profile?.name?.[0]?.toUpperCase() || 'B'}
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-[#000000] py-12 px-4">
       {/* Bandeau de feedback obligatoire */}
       {pendingFeedback && (
         <div className="bg-[#FF0055] border-b border-[#FF0055]">

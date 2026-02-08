@@ -176,25 +176,9 @@ export default function DemoRentalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="border-b border-[#1A1A1A] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/demo" className="text-2xl font-bold">
-            KLUB
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/bde/dashboard" className="text-sm text-[#A0A0A0] hover:text-white">
-              Dashboard
-            </Link>
-            <Link href="/projects" className="text-sm text-[#A0A0A0] hover:text-white">
-              Projets
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-black text-white py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+      
         {/* Hero Section */}
         <div className="mb-12">
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
@@ -329,7 +313,7 @@ export default function DemoRentalPage() {
             ))}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
