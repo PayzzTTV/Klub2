@@ -25,7 +25,8 @@
       "Bash(find:*)"
     ],
     "additionalDirectories": [
-      "c:\\projet\\Klub\\app\\demo\\projects\\[id]\\applications"
+      "c:\\projet\\Klub\\app\\demo\\projects\\[id]\\applications",
+      "c:\\projet\\Klub\\.next"
     ]
   }
 }

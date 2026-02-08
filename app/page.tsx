@@ -72,12 +72,12 @@ export default function Home() {
         {/* Demo Button */}
         <div className="mb-8">
           <Link
-            href="/messages"
+            href="/rental"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#0A0A0A] border border-[#7C3AED] text-[#7C3AED] font-medium hover:bg-[#7C3AED] hover:text-white transition-all"
           >
-            <span>💬</span>
-            <span>Accéder aux Messages</span>
-            <span className="text-xs opacity-70">(Mode Démo)</span>
+            <span>🎬</span>
+            <span>Louer du Matériel</span>
+            <span className="text-xs opacity-70">(Catalogue)</span>
           </Link>
         </div>
 

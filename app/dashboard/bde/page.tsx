@@ -110,12 +110,6 @@ export default async function BDEDashboard() {
             >
               Matériel
             </Link>
-            <Link
-              href="/messages"
-              className="py-4 border-b-2 border-transparent text-[#A0A0A0] hover:text-white transition-colors"
-            >
-              Messages
-            </Link>
           </div>
         </div>
       </nav>

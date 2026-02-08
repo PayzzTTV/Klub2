@@ -119,21 +119,16 @@ export interface Review {
   created_at: string;
 }
 
-export interface Conversation {
-  id: string;
-  participant1_id: string;
-  participant2_id: string;
-  last_message_at: string;
-  created_at: string;
-}
-
-export interface Message {
-  id: string;
-  conversation_id: string;
-  sender_id: string;
-  content: string;
-  read: boolean;
-  created_at: string;
+export interface ReviewFormData {
+  project_id: string;
+  reviewer_id: string;
+  reviewee_id: string;
+  global_rating: number;
+  punctuality_rating: number;
+  quality_rating: number;
+  communication_rating: number;
+  value_rating: number;
+  comment: string;
 }
 
 export interface ProjectApplication {
