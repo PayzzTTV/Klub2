@@ -180,13 +180,25 @@ export default function DemoRentalPage() {
       
         {/* Hero Section */}
         <div className="mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            🎵 Rental Hub
-          </h1>
-          <p className="text-lg text-[#A0A0A0] max-w-2xl">
-            Louez du matériel professionnel entre communautés étudiantes.
-            Son, lumière, vidéo, logistique - tout le nécessaire pour vos événements.
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                🎵 Rental Hub
+              </h1>
+              <p className="text-lg text-[#A0A0A0] max-w-2xl">
+                Louez du matériel professionnel entre communautés étudiantes.
+                Son, lumière, vidéo, logistique - tout le nécessaire pour vos événements.
+              </p>
+            </div>
+            {!isDemo && (
+              <Link
+                href="/rental/create"
+                className="brutalist-button bg-purple-600 hover:bg-purple-700"
+              >
+                ➕ Ajouter du Matériel
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Search & Filters */}

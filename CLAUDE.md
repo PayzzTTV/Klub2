@@ -186,13 +186,14 @@
 - [ ] Système de candidature (Orgas)
 - [ ] Filtres et recherche avancée
 
-### Phase 4: Rental Hub (Semaine 3-4)
-- [ ] Formulaire d'ajout de matériel
-- [ ] Upload d'images multiples
-- [ ] Catalogue de matériel filtrable
-- [ ] Page détail équipement
-- [ ] Système de demande de location
+### Phase 4: Rental Hub (Semaine 3-4) ✅ EN COURS
+- [x] Formulaire d'ajout de matériel
+- [x] Upload d'images multiples
+- [x] Catalogue de matériel filtrable
+- [x] Page détail équipement
+- [x] Système de demande de location
 - [ ] Gestion des disponibilités (calendrier)
+- [ ] Gestion des locations (approuver/refuser) - OWNER SIDE
 
 ### Phase 5: Système de Feedback Obligatoire (Semaine 4-5)
 - [ ] Détection automatique de projet terminé
@@ -209,24 +210,12 @@
 - [ ] Intégration du ranking dans la recherche
 - [ ] Page profil public avec reviews
 
-### Phase 7: Messagerie Temps Réel (Semaine 6)
-- [ ] Interface de chat BDE ↔ ORGA
-- [ ] Supabase Realtime integration
-- [ ] Liste des conversations avec preview dernier message
-- [ ] Notifications de nouveaux messages (badge count)
-- [ ] Système de lecture/non lu (indicateur visuel)
-- [ ] Bouton "Envoyer un message" depuis profil ORGA
-- [ ] Bouton "Envoyer un message" depuis candidature
-- [ ] Recherche de conversations
-- [ ] Affichage du statut en ligne/hors ligne
-- [ ] Indicateur "en train d'écrire..."
+### Phase 7: Messagerie Temps Réel (Semaine 6) ❌ SUPPRIMÉE
+- ❌ Fonctionnalité retirée du scope (simplification produit)
+- Les utilisateurs peuvent communiquer par email/téléphone affichés sur les profils
 
-### Phase 8: Matching IA (Semaine 6-7)
-- [ ] Analyse des mots-clés dans le chat
-- [ ] Détection d'objets demandés
-- [ ] Suggestions automatiques d'annonces
-- [ ] Intégration dans l'interface de chat
-- [ ] Système de recommandation
+### Phase 8: Matching IA (Semaine 6-7) ❌ SUPPRIMÉE
+- ❌ Dépendait du chat (Phase 7), donc également retirée
 
 ### Phase 9: Optimisations & Polish (Semaine 7-8)
 - [ ] Performance (lazy loading, ISR)
