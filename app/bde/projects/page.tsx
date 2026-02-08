@@ -173,16 +173,17 @@ export default function BDEProjectsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
               <div key={project.id} className="brutalist-card p-6 hover:border-[#7C3AED] transition-all relative group">
-                {/* Bouton Supprimer */}
+                {/* Bouton Supprimer - Always visible */}
                 <button
                   onClick={(e) => handleDeleteProject(project.id, project.status, e)}
-                  className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-[#FF0055] text-white px-3 py-1 text-xs font-semibold hover:bg-[#FF0055]/80 z-10"
+                  className="absolute top-4 right-4 bg-[#FF0055] text-white px-3 py-1 text-xs font-semibold hover:bg-[#FF0055]/80 z-50 transition-all"
                   title="Supprimer le projet"
+                  style={{ pointerEvents: 'auto' }}
                 >
-                  🗑️ Supprimer
+                  🗑️
                 </button>
 
-                <Link href={`/bde/projects/${project.id}`} className="block">
+                <Link href={`/bde/projects/${project.id}`} className="block" style={{ position: 'relative' }}>
                   {/* Status */}
                   <div className="mb-4">
                     {getStatusBadge(project.status)}
