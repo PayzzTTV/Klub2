@@ -28,30 +28,7 @@ export async function createRentalRequest(
         total_price: requestData.total_price,
         status: 'pending',
       })
-      .select(`
-        *,
-        item:inventory (
-          id,
-          title,
-          category,
-          images,
-          daily_price
-        ),
-        renter:profiles!renter_id (
-          id,
-          name,
-          organization_name,
-          avatar_url,
-          role
-        ),
-        owner:profiles!owner_id (
-          id,
-          name,
-          organization_name,
-          avatar_url,
-          role
-        )
-      `)
+      .select()
       .single();
 
     if (error) {
