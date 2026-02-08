@@ -83,9 +83,12 @@ export default function DemoBDEDashboard() {
                   Vous devez donner votre avis avant de créer un nouveau projet.
                 </p>
               </div>
-              <button className="brutalist-button-primary px-6 py-2 whitespace-nowrap">
+              <Link
+                href="/demo/feedback/1"
+                className="brutalist-button-primary px-6 py-2 whitespace-nowrap"
+              >
                 Donner mon avis
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -114,7 +117,7 @@ export default function DemoBDEDashboard() {
               Matériel
             </Link>
             <Link
-              href="/demo"
+              href="/demo/messages"
               className="py-4 border-b-2 border-transparent text-[#A0A0A0] hover:text-white transition-colors"
             >
               Messages
@@ -145,26 +148,31 @@ export default function DemoBDEDashboard() {
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4">Actions rapides</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            <div
-              className={`brutalist-card p-6 ${
-                pendingFeedback
-                  ? 'opacity-50 cursor-not-allowed'
-                  : 'hover:border-[#7C3AED] cursor-pointer'
-              } transition-all`}
-            >
-              <div className="text-3xl mb-3">🎯</div>
-              <h3 className="text-lg font-semibold mb-2">Créer un projet</h3>
-              <p className="text-sm text-[#A0A0A0]">
-                Postez un nouvel événement et trouvez des prestataires
-              </p>
-              {pendingFeedback && (
+{pendingFeedback ? (
+              <div className="brutalist-card p-6 opacity-50 cursor-not-allowed transition-all">
+                <div className="text-3xl mb-3">🎯</div>
+                <h3 className="text-lg font-semibold mb-2">Créer un projet</h3>
+                <p className="text-sm text-[#A0A0A0]">
+                  Postez un nouvel événement et trouvez des prestataires
+                </p>
                 <div className="mt-3 text-xs text-[#FF0055]">
                   ⚠️ Feedback obligatoire en attente
                 </div>
-              )}
-            </div>
+              </div>
+            ) : (
+              <Link
+                href="/demo/bde/create-project"
+                className="brutalist-card p-6 hover:border-[#7C3AED] cursor-pointer transition-all"
+              >
+                <div className="text-3xl mb-3">🎯</div>
+                <h3 className="text-lg font-semibold mb-2">Créer un projet</h3>
+                <p className="text-sm text-[#A0A0A0]">
+                  Postez un nouvel événement et trouvez des prestataires
+                </p>
+              </Link>
+            )}
 
-            <Link href="/demo" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
+            <Link href="/demo/rental" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
               <div className="text-3xl mb-3">🎵</div>
               <h3 className="text-lg font-semibold mb-2">Louer du matériel</h3>
               <p className="text-sm text-[#A0A0A0]">

@@ -72,10 +72,27 @@ export default function DemoPage() {
           </div>
         </div>
 
+        {/* Démo de la messagerie */}
+        <div className="mb-12">
+          <div className="brutalist-card p-8 text-center">
+            <div className="text-5xl mb-4">💬</div>
+            <h2 className="text-2xl font-bold mb-3">Messagerie Temps Réel</h2>
+            <p className="text-[#A0A0A0] mb-6">
+              Communiquez instantanément avec les BDE et Orgas
+            </p>
+            <Link
+              href="/demo/messages"
+              className="brutalist-button-primary px-6 py-3 inline-block"
+            >
+              Voir les Messages →
+            </Link>
+          </div>
+        </div>
+
         {/* Features principales */}
         <div className="mb-12">
           <h2 className="text-3xl font-bold mb-6 text-center">Fonctionnalités Clés</h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-4 gap-6">
             <div className="brutalist-card p-6 text-center">
               <div className="text-4xl mb-3">⭐</div>
               <h3 className="text-lg font-semibold mb-2">Feedback Obligatoire</h3>
@@ -97,6 +114,14 @@ export default function DemoPage() {
               <h3 className="text-lg font-semibold mb-2">Rental Hub</h3>
               <p className="text-sm text-[#A0A0A0]">
                 Location de matériel entre BDE et Orgas
+              </p>
+            </div>
+
+            <div className="brutalist-card p-6 text-center">
+              <div className="text-4xl mb-3">💬</div>
+              <h3 className="text-lg font-semibold mb-2">Messagerie Temps Réel</h3>
+              <p className="text-sm text-[#A0A0A0]">
+                Chat instantané avec notifications en direct
               </p>
             </div>
           </div>

@@ -24,16 +24,74 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      // 1. Créer l'utilisateur
+      // MODE DEV : Simuler la création de compte sans Supabase
+      // Pour activer : créer un fichier .env.development.local avec NEXT_PUBLIC_DEV_MODE=true
+      const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+
+      if (isDevMode) {
+        console.log('🔧 MODE DEV: Création de compte simulée (sans Supabase)');
+
+        // Simuler un délai d'inscription
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        // Stocker les infos en localStorage pour simuler une "session"
+        const mockUser = {
+          id: `dev-user-${Date.now()}`,
+          email,
+          name,
+          organization_name: organizationName,
+          role,
+          location,
+          created_at: new Date().toISOString(),
+        };
+
+        localStorage.setItem('dev_user', JSON.stringify(mockUser));
+        localStorage.setItem('dev_authenticated', 'true');
+
+        alert(`✅ Compte créé avec succès ! (Mode Dev)\n\nBienvenue ${name} !`);
+
+        // Rediriger selon le rôle
+        if (role === 'BDE') {
+          router.push('/demo/bde/dashboard');
+        } else {
+          router.push('/demo/projects');
+        }
+        return;
+      }
+
+      // MODE PRODUCTION : Utiliser Supabase normalement
+      console.log('🔐 MODE PRODUCTION: Création via Supabase');
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          data: {
+            name,
+            organization_name: organizationName,
+            role,
+            location,
+          },
+          emailRedirectTo: `${window.location.origin}/demo/bde/dashboard`,
+        }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Auth error:', authError);
+
+        // Gérer l'erreur de rate limit email
+        if (authError.message.includes('email rate limit')) {
+          throw new Error('⚠️ Limite d\'emails atteinte.\n\n💡 Active le MODE DEV:\n1. Crée un fichier ".env.development.local"\n2. Ajoute: NEXT_PUBLIC_DEV_MODE=true\n3. Redémarre le serveur (npm run dev)\n\nOu attends 20 minutes.');
+        }
+
+        throw authError;
+      }
 
       if (authData.user) {
-        // 2. Créer le profil
+        // Attendre un peu pour que l'authentification soit complète
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Créer le profil
         const { error: profileError } = await supabase.from('profiles').insert({
           id: authData.user.id,
           email,
@@ -43,21 +101,32 @@ export default function SignupPage() {
           location,
         });
 
-        if (profileError) throw profileError;
+        if (profileError) {
+          console.error('Profile error:', profileError);
 
-        // 3. Rediriger vers le dashboard approprié
+          if (profileError.message.includes('row-level security')) {
+            throw new Error('Erreur de permissions RLS. Exécute supabase-fix-profiles-complete.sql');
+          }
+          throw profileError;
+        }
+
+        alert('✅ Compte créé avec succès !');
         if (role === 'BDE') {
-          router.push('/dashboard/bde');
+          router.push('/demo/bde/dashboard');
         } else {
-          router.push('/dashboard/orga');
+          router.push('/demo/projects');
         }
       }
     } catch (err: any) {
+      console.error('Signup error:', err);
       setError(err.message || 'Erreur lors de l\'inscription');
     } finally {
       setLoading(false);
     }
   };
+
+  // Afficher un badge si en mode dev
+  const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
 
   return (
     <div className="min-h-screen bg-[#000000] flex items-center justify-center px-4 py-12">
@@ -72,13 +141,16 @@ export default function SignupPage() {
             </h1>
           </Link>
           <p className="text-[#A0A0A0]">Créer votre compte</p>
+          {isDevMode && (
+            <p className="text-[#00FF66] text-xs mt-2">🔧 MODE DEV ACTIF (Sans emails)</p>
+          )}
         </div>
 
         {/* Form */}
         <div className="brutalist-card p-8">
           <form onSubmit={handleSignup} className="space-y-6">
             {error && (
-              <div className="bg-[#FF0055]/10 border border-[#FF0055] p-3 rounded text-sm text-[#FF0055]">
+              <div className="bg-[#FF0055]/10 border border-[#FF0055] p-3 rounded text-sm text-[#FF0055] whitespace-pre-line">
                 {error}
               </div>
             )}
