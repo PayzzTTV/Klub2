@@ -184,10 +184,10 @@ export default function DemoRentalPage() {
             KLUB
           </Link>
           <div className="flex items-center gap-4">
-            <Link href="/demo/bde/dashboard" className="text-sm text-[#A0A0A0] hover:text-white">
+            <Link href="/bde/dashboard" className="text-sm text-[#A0A0A0] hover:text-white">
               Dashboard
             </Link>
-            <Link href="/demo/projects" className="text-sm text-[#A0A0A0] hover:text-white">
+            <Link href="/projects" className="text-sm text-[#A0A0A0] hover:text-white">
               Projets
             </Link>
           </div>
@@ -270,7 +270,7 @@ export default function DemoRentalPage() {
             {filteredEquipment.map((item) => (
               <Link
                 key={item.id}
-                href={`/demo/rental/${item.id}`}
+                href={`/rental/${item.id}`}
                 className="brutalist-card overflow-hidden hover:border-[#7C3AED] transition-all group"
               >
                 {/* Image */}

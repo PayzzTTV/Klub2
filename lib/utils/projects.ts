@@ -60,6 +60,86 @@ export interface CreateProjectData {
 }
 
 // ============================================================================
+// AUTO UPDATE PROJECT STATUS BASED ON DATES
+// ============================================================================
+
+/**
+ * Update project status automatically based on dates:
+ * - published → in_progress (when start_date is reached)
+ * - in_progress → completed (when end_date is passed)
+ */
+export async function updateProjectStatusByDate(
+  supabase: SupabaseClient,
+  projectId: string
+): Promise<void> {
+  try {
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select('id, status, start_date, end_date')
+      .eq('id', projectId)
+      .single();
+
+    if (error || !project) return;
+
+    const now = new Date();
+    const startDate = new Date(project.start_date);
+    const endDate = new Date(project.end_date);
+
+    let newStatus: string | null = null;
+
+    // published → in_progress (start date reached)
+    if (project.status === 'published' && now >= startDate) {
+      newStatus = 'in_progress';
+    }
+
+    // in_progress → completed (end date passed)
+    if (project.status === 'in_progress' && now > endDate) {
+      newStatus = 'completed';
+    }
+
+    if (newStatus) {
+      await supabase
+        .from('projects')
+        .update({ status: newStatus })
+        .eq('id', projectId);
+
+      console.log(`✅ Project ${projectId} status updated: ${project.status} → ${newStatus}`);
+    }
+  } catch (error) {
+    console.error('Error updating project status:', error);
+  }
+}
+
+/**
+ * Batch update all projects that need status change
+ */
+export async function updateAllProjectStatuses(
+  supabase: SupabaseClient
+): Promise<void> {
+  try {
+    const now = new Date().toISOString();
+
+    // Update published → in_progress (start_date reached)
+    await supabase
+      .from('projects')
+      .update({ status: 'in_progress' })
+      .eq('status', 'published')
+      .lte('start_date', now);
+
+    // Update in_progress → completed (end_date passed)
+    await supabase
+      .from('projects')
+      .update({ status: 'completed' })
+      .eq('status', 'in_progress')
+      .lt('end_date', now);
+
+    console.log('✅ All project statuses updated');
+  } catch (error) {
+    console.error('Error batch updating project statuses:', error);
+  }
+}
+
+// ============================================================================
 // GET PUBLISHED PROJECTS (for ORGA to browse)
 // ============================================================================
 

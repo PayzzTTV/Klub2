@@ -132,7 +132,7 @@ export default function MessagesPage() {
             </div>
 
             <button
-              onClick={() => router.push("/demo/bde/dashboard")}
+              onClick={() => router.push("/bde/dashboard")}
               className="px-4 py-2 bg-[#0A0A0A] border border-[#1A1A1A] text-white text-sm font-medium hover:bg-[#1A1A1A] transition-colors"
             >
               Retour Dashboard
@@ -179,7 +179,7 @@ export default function MessagesPage() {
                 filteredConversations.map((conv) => (
                   <button
                     key={conv.id}
-                    onClick={() => router.push(`/demo/messages/${conv.id}`)}
+                    onClick={() => router.push(`/messages/${conv.id}`)}
                     className="w-full bg-[#0A0A0A] border border-[#1A1A1A] p-4 hover:bg-[#1A1A1A] transition-all duration-200 group text-left"
                   >
                     <div className="flex items-start gap-4">

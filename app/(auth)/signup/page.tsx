@@ -52,9 +52,9 @@ export default function SignupPage() {
 
         // Rediriger selon le rôle
         if (role === 'BDE') {
-          router.push('/demo/bde/dashboard');
+          router.push('/bde/dashboard');
         } else {
-          router.push('/demo/projects');
+          router.push('/projects');
         }
         return;
       }
@@ -72,7 +72,7 @@ export default function SignupPage() {
             role,
             location,
           },
-          emailRedirectTo: `${window.location.origin}/demo/bde/dashboard`,
+          emailRedirectTo: `${window.location.origin}/bde/dashboard`,
         }
       });
 
@@ -96,9 +96,9 @@ export default function SignupPage() {
 
         alert('✅ Compte créé avec succès !');
         if (role === 'BDE') {
-          router.push('/demo/bde/dashboard');
+          router.push('/bde/dashboard');
         } else {
-          router.push('/demo/projects');
+          router.push('/projects');
         }
       }
     } catch (err: any) {

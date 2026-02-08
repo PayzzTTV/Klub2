@@ -145,7 +145,7 @@ export default function DemoProjectDetailPage() {
       <div className="min-h-screen bg-[#000000] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Projet non trouvé</h1>
-          <Link href="/demo/projects" className="text-[#7C3AED] hover:underline">
+          <Link href="/projects" className="text-[#7C3AED] hover:underline">
             ← Retour aux projets
           </Link>
         </div>
@@ -164,7 +164,7 @@ export default function DemoProjectDetailPage() {
             <span className="text-white">UB</span>
             {isDemo && <span className="text-sm text-[#A0A0A0] ml-4">(Mode Démo)</span>}
           </h1>
-          <Link href="/demo/projects" className="text-sm text-[#A0A0A0] hover:text-white">
+          <Link href="/projects" className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour aux projets
           </Link>
         </div>
@@ -280,7 +280,7 @@ export default function DemoProjectDetailPage() {
                         </span>
                         <div className="flex gap-2">
                           <Link
-                            href="/demo/messages/conv-1"
+                            href="/messages/conv-1"
                             className="brutalist-button px-4 py-2 text-sm"
                           >
                             💬 Message
@@ -289,7 +289,7 @@ export default function DemoProjectDetailPage() {
                             Accepter
                           </button>
                           <Link
-                            href={`/demo/projects/${projectId}/applications/${app.id}`}
+                            href={`/projects/${projectId}/applications/${app.id}`}
                             className="brutalist-button px-4 py-2 text-sm"
                           >
                             Voir profil
@@ -315,7 +315,7 @@ export default function DemoProjectDetailPage() {
             <div className="brutalist-card p-6">
               <h3 className="text-lg font-bold mb-4">Vous êtes intéressé ?</h3>
               <Link
-                href={`/demo/projects/${projectId}/apply`}
+                href={`/projects/${projectId}/apply`}
                 className="brutalist-button-primary px-6 py-3 block text-center mb-3"
               >
                 Candidater maintenant

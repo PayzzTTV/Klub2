@@ -67,7 +67,7 @@ export default function DemoCreateProjectPage() {
 
       if (newProject) {
         alert('✅ Projet créé avec succès !');
-        router.push(`/demo/projects/${newProject.id}`);
+        router.push(`/projects/${newProject.id}`);
       } else {
         alert('❌ Erreur lors de la création du projet. Vérifiez vos permissions.');
         setSubmitting(false);
@@ -76,7 +76,7 @@ export default function DemoCreateProjectPage() {
       // Demo mode: Just show alert
       alert('Mode Démo : Le projet a été créé avec succès ! (Données non enregistrées)');
       setSubmitting(false);
-      router.push('/demo/bde/dashboard');
+      router.push('/bde/dashboard');
     }
   };
 
@@ -221,7 +221,7 @@ export default function DemoCreateProjectPage() {
               {submitting ? 'Création en cours...' : 'Publier le projet'}
             </button>
             <Link
-              href="/demo/bde/dashboard"
+              href="/bde/dashboard"
               className="brutalist-button px-8 py-3 inline-block"
             >
               Annuler

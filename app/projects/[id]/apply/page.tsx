@@ -100,7 +100,7 @@ export default function ApplyPage() {
 
     if (application) {
       alert('✅ Candidature envoyée avec succès !');
-      router.push(`/demo/projects/${projectId}`);
+      router.push(`/projects/${projectId}`);
     } else {
       setError('Erreur lors de l\'envoi de la candidature. Vous avez peut-être déjà postulé à ce projet.');
       setSubmitting(false);
@@ -123,7 +123,7 @@ export default function ApplyPage() {
       <div className="min-h-screen bg-[#000000] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">{error}</h1>
-          <Link href="/demo/projects" className="text-[#7C3AED] hover:underline">
+          <Link href="/projects" className="text-[#7C3AED] hover:underline">
             ← Retour aux projets
           </Link>
         </div>
@@ -136,7 +136,7 @@ export default function ApplyPage() {
       <div className="min-h-screen bg-[#000000] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Projet non trouvé</h1>
-          <Link href="/demo/projects" className="text-[#7C3AED] hover:underline">
+          <Link href="/projects" className="text-[#7C3AED] hover:underline">
             ← Retour aux projets
           </Link>
         </div>
@@ -154,7 +154,7 @@ export default function ApplyPage() {
             <span className="text-[#7C3AED]">L</span>
             <span className="text-white">UB</span>
           </h1>
-          <Link href={`/demo/projects/${projectId}`} className="text-sm text-[#A0A0A0] hover:text-white">
+          <Link href={`/projects/${projectId}`} className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour
           </Link>
         </div>
@@ -230,7 +230,7 @@ export default function ApplyPage() {
                 {submitting ? 'Envoi en cours...' : 'Envoyer la candidature'}
               </button>
               <Link
-                href={`/demo/projects/${projectId}`}
+                href={`/projects/${projectId}`}
                 className="brutalist-button px-8 py-3 inline-block"
               >
                 Annuler

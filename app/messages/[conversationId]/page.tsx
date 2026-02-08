@@ -287,7 +287,7 @@ export default function ChatPage() {
         <div className="text-center">
           <p className="text-[#A0A0A0] mb-4">Conversation introuvable</p>
           <button
-            onClick={() => router.push("/demo/messages")}
+            onClick={() => router.push("/messages")}
             className="px-4 py-2 bg-[#7C3AED] text-white hover:bg-[#6C2BD9] transition-colors"
           >
             Retour aux messages
@@ -305,7 +305,7 @@ export default function ChatPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push("/demo/messages")}
+                onClick={() => router.push("/messages")}
                 className="p-2 hover:bg-[#1A1A1A] transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
