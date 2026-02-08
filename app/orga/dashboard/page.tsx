@@ -103,7 +103,7 @@ export default function DemoOrgaDashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6 mb-12">
+        <div className="grid md:grid-cols-3 gap-6 mb-12">
           <Link href="/projects" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
             <h3 className="text-xl font-bold mb-2">📋 Voir les Projets</h3>
             <p className="text-sm text-[#A0A0A0]">Consultez les événements disponibles et postulez</p>
@@ -112,6 +112,11 @@ export default function DemoOrgaDashboardPage() {
           <Link href="/rental" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
             <h3 className="text-xl font-bold mb-2">🎬 Louer du Matériel</h3>
             <p className="text-sm text-[#A0A0A0]">Parcourez le catalogue de matériel disponible</p>
+          </Link>
+
+          <Link href="/rental/manage" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
+            <h3 className="text-xl font-bold mb-2">📋 Gérer Locations</h3>
+            <p className="text-sm text-[#A0A0A0]">Gérez vos demandes et équipements loués</p>
           </Link>
         </div>
 

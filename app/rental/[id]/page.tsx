@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { getRentalItemById } from '@/lib/utils/inventory';
+import { getRentalItemById, getItemRentals } from '@/lib/utils/inventory';
 import { createRentalRequest } from '@/lib/utils/rentals';
 import { getOrgaStats } from '@/lib/utils/profiles';
 import type { InventoryItem } from '@/types';
@@ -31,6 +31,7 @@ export default function RentalDetailPage() {
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [bookedDates, setBookedDates] = useState<any[]>([]);
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [showBookingForm, setShowBookingForm] = useState(false);
@@ -71,6 +72,10 @@ export default function RentalDetailPage() {
           const stats = await getOrgaStats(supabase, equipmentData.owner_id);
           setOwnerStats(stats);
         }
+
+        // Load booked dates
+        const rentals = await getItemRentals(supabase, equipmentId, false);
+        setBookedDates(rentals);
 
         setLoading(false);
       } catch (err) {
@@ -333,6 +338,37 @@ export default function RentalDetailPage() {
                 </button>
               )}
             </div>
+
+            {/* Booked Dates Info */}
+            {showBookingForm && bookedDates.length > 0 && (
+              <div className="brutalist-card p-6 mb-6 bg-yellow-900/20 border-yellow-700">
+                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  📅 Dates déjà réservées
+                </h3>
+                <div className="space-y-2 text-sm">
+                  {bookedDates.slice(0, 5).map((rental) => (
+                    <div key={rental.id} className="flex items-center justify-between text-gray-300">
+                      <span>
+                        {new Date(rental.start_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                        {' → '}
+                        {new Date(rental.end_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </span>
+                      <span className="px-2 py-1 bg-yellow-700 rounded text-xs">
+                        {rental.status === 'pending' ? '⏳ Pending' : '✅ Confirmé'}
+                      </span>
+                    </div>
+                  ))}
+                  {bookedDates.length > 5 && (
+                    <p className="text-xs text-gray-400 mt-2">
+                      + {bookedDates.length - 5} autre(s) réservation(s)
+                    </p>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-3">
+                  ℹ️ Vérifiez que vos dates ne chevauchent pas ces périodes
+                </p>
+              </div>
+            )}
 
             {/* Booking Form */}
             {showBookingForm && (

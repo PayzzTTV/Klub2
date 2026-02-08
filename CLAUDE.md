@@ -186,14 +186,17 @@
 - [ ] Système de candidature (Orgas)
 - [ ] Filtres et recherche avancée
 
-### Phase 4: Rental Hub (Semaine 3-4) ✅ EN COURS
+### Phase 4: Rental Hub (Semaine 3-4) ✅ COMPLÉTÉ
 - [x] Formulaire d'ajout de matériel
 - [x] Upload d'images multiples
 - [x] Catalogue de matériel filtrable
 - [x] Page détail équipement
 - [x] Système de demande de location
-- [ ] Gestion des disponibilités (calendrier)
-- [ ] Gestion des locations (approuver/refuser) - OWNER SIDE
+- [x] Gestion des disponibilités (calendrier)
+- [x] Gestion des locations (approuver/refuser) - OWNER SIDE
+- [x] Page /rental/manage avec onglets incoming/outgoing
+- [x] Filtres par statut (pending, approved, ongoing, completed, cancelled)
+- [x] Affichage des dates bloquées dans rental detail
 
 ### Phase 5: Système de Feedback Obligatoire (Semaine 4-5)
 - [ ] Détection automatique de projet terminé
