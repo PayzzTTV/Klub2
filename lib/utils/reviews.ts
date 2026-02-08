@@ -1,6 +1,20 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Review, ReviewFormData } from '@/types';
 
+export type ReviewWithRelations = Review & {
+  project?: {
+    id: string;
+    title: string;
+    type: string;
+  };
+  reviewer?: {
+    id: string;
+    name: string;
+    organization_name?: string;
+    avatar_url?: string;
+  };
+};
+
 /**
  * Create a new review for an ORGA after a completed project
  */
@@ -43,7 +57,7 @@ export async function createReview(
 export async function getOrgaReviews(
   supabase: SupabaseClient,
   orgaId: string
-): Promise<Review[]> {
+): Promise<ReviewWithRelations[]> {
   try {
     const { data, error } = await supabase
       .from('reviews')
@@ -69,7 +83,7 @@ export async function getOrgaReviews(
       return [];
     }
 
-    return data as Review[];
+    return data as ReviewWithRelations[];
   } catch (error) {
     console.error('Exception in getOrgaReviews:', error);
     return [];

@@ -3,11 +3,11 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getPublishedProjects, Project } from '@/lib/utils/projects';
+import { getPublishedProjects, ProjectWithProfile } from '@/lib/utils/projects';
 
 export default function DemoProjectsPage() {
   const supabase = createClient();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(true);
 
@@ -139,8 +139,8 @@ export default function DemoProjectsPage() {
         project.location.toLowerCase().includes(filters.search.toLowerCase()) ||
         project.description.toLowerCase().includes(filters.search.toLowerCase());
 
-      const matchesBudgetMin = filters.budgetMin === '' || project.budget >= Number(filters.budgetMin);
-      const matchesBudgetMax = filters.budgetMax === '' || project.budget <= Number(filters.budgetMax);
+      const matchesBudgetMin = filters.budgetMin === '' || (project.budget && project.budget >= Number(filters.budgetMin));
+      const matchesBudgetMax = filters.budgetMax === '' || (project.budget && project.budget <= Number(filters.budgetMax));
       const matchesLocation = filters.location === '' ||
         project.location.toLowerCase().includes(filters.location.toLowerCase());
 
@@ -150,9 +150,9 @@ export default function DemoProjectsPage() {
       if (sortBy === 'date') {
         return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
       } else if (sortBy === 'budget') {
-        return b.budget - a.budget;
+        return (b.budget || 0) - (a.budget || 0);
       } else if (sortBy === 'capacity') {
-        return b.capacity - a.capacity;
+        return (b.capacity || 0) - (a.capacity || 0);
       }
       return 0;
     });
@@ -301,11 +301,11 @@ export default function DemoProjectsPage() {
                   <div className="space-y-2 mb-4 text-sm">
                     <div className="flex items-center gap-2">
                       <span className="text-[#A0A0A0]">💰</span>
-                      <span className="font-semibold">{project.budget.toLocaleString('fr-FR')} €</span>
+                      <span className="font-semibold">{project.budget?.toLocaleString('fr-FR') || '0'} €</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[#A0A0A0]">👥</span>
-                      <span>{project.capacity} personnes</span>
+                      <span>{project.capacity || 0} personnes</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-[#A0A0A0]">📍</span>

@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { getRentalItems } from '@/lib/utils/inventory';
-import { InventoryItem } from '@/types';
+import { getRentalItems, InventoryItemWithOwner } from '@/lib/utils/inventory';
 
 // Mock equipment data (fallback for demo mode)
 const mockEquipment = [
@@ -127,7 +126,7 @@ export default function DemoRentalPage() {
 
   const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [searchQuery, setSearchQuery] = useState('');
-  const [equipment, setEquipment] = useState<InventoryItem[]>([]);
+  const [equipment, setEquipment] = useState<InventoryItemWithOwner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(true);
 
