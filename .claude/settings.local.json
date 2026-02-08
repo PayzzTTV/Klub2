@@ -19,7 +19,9 @@
       "Bash(ping:*)",
       "Bash(ls:*)",
       "Bash(lsof:*)",
-      "Bash(powershell -Command \"Stop-Process -Id 70080 -Force\")"
+      "Bash(powershell -Command \"Stop-Process -Id 70080 -Force\")",
+      "Bash(set NODE_OPTIONS=--max-old-space-size=4096)",
+      "Bash(npx next dev:*)"
     ],
     "additionalDirectories": [
       "c:\\projet\\Klub\\app\\demo\\projects\\[id]\\applications"

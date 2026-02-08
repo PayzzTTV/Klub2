@@ -88,27 +88,11 @@ export default function SignupPage() {
       }
 
       if (authData.user) {
-        // Attendre un peu pour que l'authentification soit complète
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // ✅ Le profil est créé AUTOMATIQUEMENT par le trigger Supabase
+        // Pas besoin de l'insérer manuellement !
 
-        // Créer le profil
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: authData.user.id,
-          email,
-          name,
-          organization_name: organizationName,
-          role,
-          location,
-        });
-
-        if (profileError) {
-          console.error('Profile error:', profileError);
-
-          if (profileError.message.includes('row-level security')) {
-            throw new Error('Erreur de permissions RLS. Exécute supabase-fix-profiles-complete.sql');
-          }
-          throw profileError;
-        }
+        // Attendre que le trigger termine la création du profil
+        await new Promise(resolve => setTimeout(resolve, 1500));
 
         alert('✅ Compte créé avec succès !');
         if (role === 'BDE') {
