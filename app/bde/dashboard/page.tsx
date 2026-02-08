@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { getBDEProjects, hasPendingFeedback, updateAllProjectStatuses } from '@/lib/utils/projects';
+import { getBDEProjects, updateAllProjectStatuses } from '@/lib/utils/projects';
 import { getProfile } from '@/lib/utils/profiles';
 import { Profile, Project } from '@/types';
+import { usePendingFeedback } from '@/lib/hooks/usePendingFeedback';
+import FeedbackBanner from '@/components/feedback/FeedbackBanner';
 
 export default function DemoBDEDashboard() {
   const router = useRouter();
@@ -14,8 +16,11 @@ export default function DemoBDEDashboard() {
 
   const [profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [pendingFeedback, setPendingFeedback] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Use the pending feedback hook
+  const { pendingProjects, loading: feedbackLoading } = usePendingFeedback(supabase, userId);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -27,19 +32,19 @@ export default function DemoBDEDashboard() {
         return;
       }
 
+      setUserId(user.id);
+
       // Update project statuses based on dates
       await updateAllProjectStatuses(supabase);
 
       // Load data in parallel
-      const [profileData, projectsData, needsFeedback] = await Promise.all([
+      const [profileData, projectsData] = await Promise.all([
         getProfile(supabase, user.id),
         getBDEProjects(supabase, user.id),
-        hasPendingFeedback(supabase, user.id),
       ]);
 
       if (profileData) setProfile(profileData);
       if (projectsData) setProjects(projectsData);
-      setPendingFeedback(needsFeedback);
       setLoading(false);
     }
 
@@ -58,33 +63,13 @@ export default function DemoBDEDashboard() {
     );
   }
 
+  const hasPendingFeedback = pendingProjects.length > 0;
+
   return (
     <div className="min-h-screen bg-[#000000] py-12 px-4">
-      {/* Bandeau de feedback obligatoire */}
-      {pendingFeedback && (
-        <div className="bg-[#FF0055] border-b border-[#FF0055]">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-bold text-white mb-1">⚠️ Feedback obligatoire</h3>
-                <p className="text-sm text-white/90">
-                  Vous avez 1 projet(s) terminé(s) en attente de feedback.
-                  Vous devez donner votre avis avant de créer un nouveau projet.
-                </p>
-              </div>
-              <Link
-                href={`/feedback/${projects.find(p => p.status === 'completed' && !p.feedback_given)?.id || '1'}`}
-                className="brutalist-button-primary px-6 py-2 whitespace-nowrap"
-              >
-                Donner mon avis
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Contenu principal */}
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Bandeau de feedback obligatoire */}
+        <FeedbackBanner projects={pendingProjects} />
         {/* Statistiques */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="brutalist-card p-6">
@@ -105,7 +90,7 @@ export default function DemoBDEDashboard() {
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4">Actions rapides</h2>
           <div className="grid md:grid-cols-2 gap-4">
-{pendingFeedback ? (
+            {hasPendingFeedback ? (
               <div className="brutalist-card p-6 opacity-50 cursor-not-allowed transition-all">
                 <div className="text-3xl mb-3">🎯</div>
                 <h3 className="text-lg font-semibold mb-2">Créer un projet</h3>
@@ -149,7 +134,7 @@ export default function DemoBDEDashboard() {
               <p className="text-sm text-[#A0A0A0] mb-4">
                 Créez votre premier projet pour commencer à collaborer avec des prestataires
               </p>
-              {!pendingFeedback && (
+              {!hasPendingFeedback && (
                 <Link
                   href="/bde/create-project"
                   className="brutalist-button-primary inline-block px-6 py-2"
