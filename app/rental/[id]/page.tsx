@@ -128,7 +128,7 @@ export default function RentalDetailPage() {
       });
 
       if (!rental) {
-        alert('❌ Erreur lors de l\'envoi de la demande');
+        alert('❌ Erreur lors de l\'envoi de la demande.\n\nVeuillez vérifier:\n- Que vous êtes bien connecté\n- Que les dates sont valides\n- Que l\'équipement est disponible\n\nConsultez la console (F12) pour plus de détails.');
         setSubmitting(false);
         return;
       }

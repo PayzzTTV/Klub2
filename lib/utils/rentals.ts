@@ -55,7 +55,13 @@ export async function createRentalRequest(
       .single();
 
     if (error) {
-      console.error('Error creating rental request:', error);
+      console.error('Error creating rental request:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        full: error
+      });
       return null;
     }
 
