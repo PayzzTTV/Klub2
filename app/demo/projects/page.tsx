@@ -102,7 +102,7 @@ export default function DemoProjectsPage() {
 
   const projectTypes = ['all', 'Gala', 'Soirée', 'Festival', 'Conférence', 'Autre'];
 
-  // Load projects from Supabase or use mock data
+  // Load projects from Supabase
   useEffect(() => {
     async function loadProjects() {
       const { data: { user } } = await supabase.auth.getUser();
@@ -113,16 +113,11 @@ export default function DemoProjectsPage() {
           type: filters.type,
           search: '' // Search is handled client-side
         });
-        if (supabaseProjects.length > 0) {
-          setProjects(supabaseProjects);
-        } else {
-          // Use mock data if no projects in database
-          setProjects(mockProjects);
-        }
+        setProjects(supabaseProjects || []);
       } else {
-        // Not authenticated, use mock data
+        // Not authenticated, redirect to login
+        setProjects(mockProjects); // Fallback to demo mode for unauthenticated users
         setIsDemo(true);
-        setProjects(mockProjects);
       }
       setLoading(false);
     }

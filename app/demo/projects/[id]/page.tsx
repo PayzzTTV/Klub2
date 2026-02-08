@@ -106,16 +106,16 @@ export default function DemoProjectDetailPage() {
 
       if (user) {
         setIsDemo(false);
-        const supabaseProject = await getProjectById(supabase, projectId);
+        const [supabaseProject, projectApps] = await Promise.all([
+          getProjectById(supabase, projectId),
+          getProjectApplications(supabase, projectId),
+        ]);
 
         if (supabaseProject) {
           setProject(supabaseProject);
-
-          // Load applications for this project
-          const projectApps = await getProjectApplications(supabase, projectId);
-          setApplications(projectApps);
+          setApplications(projectApps || []);
         } else {
-          // Fallback to mock data
+          // Fallback to mock data if project not found in DB
           setProject(mockProjects[projectId] || null);
         }
       } else {
