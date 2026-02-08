@@ -20,6 +20,8 @@ export default function BDEProjectDetailPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let isMounted = true;
+
     async function loadProjectDetail() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
@@ -29,6 +31,7 @@ export default function BDEProjectDetailPage() {
           return;
         }
 
+        if (!isMounted) return;
         setCurrentUserId(user.id);
 
         // Update project status based on dates
@@ -39,6 +42,8 @@ export default function BDEProjectDetailPage() {
           getProjectById(supabase, projectId),
           getProjectApplications(supabase, projectId),
         ]);
+
+        if (!isMounted) return;
 
         if (!projectData) {
           setError('Projet non trouvé');
@@ -58,12 +63,18 @@ export default function BDEProjectDetailPage() {
         setLoading(false);
       } catch (err) {
         console.error('Error loading project detail:', err);
-        setError('Erreur lors du chargement du projet');
-        setLoading(false);
+        if (isMounted) {
+          setError('Erreur lors du chargement du projet');
+          setLoading(false);
+        }
       }
     }
 
     loadProjectDetail();
+
+    return () => {
+      isMounted = false;
+    };
   }, [supabase, projectId, router]);
 
   const handleAcceptApplication = async (applicationId: string) => {
@@ -128,6 +139,28 @@ export default function BDEProjectDetailPage() {
     }
   };
 
+  const handleCompleteProject = async () => {
+    if (!confirm('⚠️ Terminer ce projet ? Il passera en mode "Terminé".')) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'completed' })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      // Reload project
+      const updatedProject = await getProjectById(supabase, projectId);
+      setProject(updatedProject);
+
+      alert('✅ Projet terminé !');
+    } catch (err) {
+      console.error('Error completing project:', err);
+      alert('❌ Erreur lors de la finalisation');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -166,18 +199,8 @@ export default function BDEProjectDetailPage() {
   const rejectedApplications = applications.filter(app => app.status === 'rejected');
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="border-b border-[#1A1A1A] px-6 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link href="/bde/dashboard" className="text-2xl font-bold">
-            ← KLUB
-          </Link>
-          <span className="text-sm text-[#A0A0A0]">Mon Projet</span>
-        </div>
-      </header>
-
-      <main className="max-w-6xl mx-auto px-6 py-12">
+    <div className="min-h-screen bg-black text-white py-12 px-4">
+      <main className="max-w-6xl mx-auto">
         {/* Project Header */}
         <div className="brutalist-card p-8 mb-8">
           <div className="flex items-start justify-between mb-6">
@@ -219,6 +242,21 @@ export default function BDEProjectDetailPage() {
               </button>
               <p className="text-xs text-[#A0A0A0] mt-2">
                 Le projet passera en mode "En cours"
+              </p>
+            </div>
+          )}
+
+          {/* Complete Project Button - Only for in_progress */}
+          {project.status === 'in_progress' && (
+            <div className="mb-6">
+              <button
+                onClick={handleCompleteProject}
+                className="brutalist-button-primary px-6 py-3"
+              >
+                ✅ Terminer le projet
+              </button>
+              <p className="text-xs text-[#A0A0A0] mt-2">
+                Le projet passera en mode "Terminé"
               </p>
             </div>
           )}

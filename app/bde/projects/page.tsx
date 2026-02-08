@@ -19,6 +19,7 @@ type Project = {
 export default function BDEProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
 
@@ -33,12 +34,13 @@ export default function BDEProjectsPage() {
       // Récupérer TOUS les projets du BDE (peu importe le statut)
       const { data, error } = await supabase
         .from('projects')
-        .select('*')
+        .select('id, title, type, budget, capacity, location, start_date, status')
         .eq('bde_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error loading projects:', error);
+        setLoading(false);
         return;
       }
 
@@ -47,7 +49,7 @@ export default function BDEProjectsPage() {
     }
 
     loadProjects();
-  }, []);
+  }, [router, supabase]);
 
   const handleDeleteProject = async (projectId: string, status: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -133,30 +135,50 @@ export default function BDEProjectsPage() {
           </Link>
         </div>
 
-        {/* Stats */}
+        {/* Stats - Cliquables pour filtrer */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <div className="brutalist-card p-6">
-            <div className="text-2xl font-bold text-white">{projects.length}</div>
-            <div className="text-sm text-[#A0A0A0]">Total projets</div>
-          </div>
-          <div className="brutalist-card p-6">
-            <div className="text-2xl font-bold text-[#00FF66]">
+          <button
+            onClick={() => setFilterStatus(null)}
+            className={`brutalist-card p-6 text-left transition-all hover:border-[#7C3AED] cursor-pointer ${
+              filterStatus === null ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-white pointer-events-none">{projects.length}</div>
+            <div className="text-sm text-[#A0A0A0] pointer-events-none">Total projets</div>
+          </button>
+          <button
+            onClick={() => setFilterStatus('published')}
+            className={`brutalist-card p-6 text-left transition-all hover:border-[#00FF66] cursor-pointer ${
+              filterStatus === 'published' ? 'border-[#00FF66] bg-[#00FF66]/5' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-[#00FF66] pointer-events-none">
               {projects.filter(p => p.status === 'published').length}
             </div>
-            <div className="text-sm text-[#A0A0A0]">Publiés</div>
-          </div>
-          <div className="brutalist-card p-6">
-            <div className="text-2xl font-bold text-[#7C3AED]">
+            <div className="text-sm text-[#A0A0A0] pointer-events-none">Publiés</div>
+          </button>
+          <button
+            onClick={() => setFilterStatus('in_progress')}
+            className={`brutalist-card p-6 text-left transition-all hover:border-[#7C3AED] cursor-pointer ${
+              filterStatus === 'in_progress' ? 'border-[#7C3AED] bg-[#7C3AED]/5' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-[#7C3AED] pointer-events-none">
               {projects.filter(p => p.status === 'in_progress').length}
             </div>
-            <div className="text-sm text-[#A0A0A0]">En cours</div>
-          </div>
-          <div className="brutalist-card p-6">
-            <div className="text-2xl font-bold text-white">
+            <div className="text-sm text-[#A0A0A0] pointer-events-none">En cours</div>
+          </button>
+          <button
+            onClick={() => setFilterStatus('completed')}
+            className={`brutalist-card p-6 text-left transition-all hover:border-[#00FF66] cursor-pointer ${
+              filterStatus === 'completed' ? 'border-[#00FF66] bg-[#00FF66]/5' : ''
+            }`}
+          >
+            <div className="text-2xl font-bold text-white pointer-events-none">
               {projects.filter(p => p.status === 'completed').length}
             </div>
-            <div className="text-sm text-[#A0A0A0]">Terminés</div>
-          </div>
+            <div className="text-sm text-[#A0A0A0] pointer-events-none">Terminés</div>
+          </button>
         </div>
 
         {/* Liste des projets */}
@@ -170,8 +192,42 @@ export default function BDEProjectsPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
+          <>
+            {/* Indicateur de filtre actif */}
+            {filterStatus && (
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-sm text-[#A0A0A0]">
+                  Filtré par: <span className="text-white font-semibold">
+                    {filterStatus === 'published' && '🟢 Publiés'}
+                    {filterStatus === 'in_progress' && '⚡ En cours'}
+                    {filterStatus === 'completed' && '✅ Terminés'}
+                  </span>
+                </span>
+                <button
+                  onClick={() => setFilterStatus(null)}
+                  className="text-xs text-[#7C3AED] hover:text-white transition-colors"
+                >
+                  ✕ Effacer le filtre
+                </button>
+              </div>
+            )}
+
+            {/* Projets filtrés */}
+            {projects.filter(p => !filterStatus || p.status === filterStatus).length === 0 ? (
+              <div className="brutalist-card p-12 text-center">
+                <div className="text-6xl mb-4">🔍</div>
+                <h2 className="text-2xl font-bold text-white mb-2">Aucun projet {filterStatus === 'published' ? 'publié' : filterStatus === 'in_progress' ? 'en cours' : 'terminé'}</h2>
+                <p className="text-[#A0A0A0] mb-6">Essayez un autre filtre</p>
+                <button
+                  onClick={() => setFilterStatus(null)}
+                  className="brutalist-button px-6 py-3"
+                >
+                  Voir tous les projets
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.filter(p => !filterStatus || p.status === filterStatus).map((project) => (
               <div key={project.id} className="brutalist-card p-6 hover:border-[#7C3AED] transition-all relative group">
                 {/* Bouton Supprimer - Always visible */}
                 <button
@@ -229,6 +285,8 @@ export default function BDEProjectsPage() {
               </div>
             ))}
           </div>
+            )}
+          </>
         )}
       </div>
     </div>
