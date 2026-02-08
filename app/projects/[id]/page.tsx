@@ -333,13 +333,8 @@ export default function DemoProjectDetailPage() {
                         <span className="text-xs text-[#A0A0A0]">
                           Candidature reçue le {new Date(app.created_at).toLocaleDateString('fr-FR')}
                         </span>
+
                         <div className="flex gap-2">
-                          <Link
-                            href="/messages/conv-1"
-                            className="brutalist-button px-4 py-2 text-sm"
-                          >
-                            💬 Message
-                          </Link>
                           {/* Show Accept/Reject buttons only if user is owner and status is pending */}
                           {isOwner && app.status === 'pending' && (
                             <>
@@ -357,6 +352,7 @@ export default function DemoProjectDetailPage() {
                               </button>
                             </>
                           )}
+
                           {/* Show status badge if not pending */}
                           {app.status === 'accepted' && (
                             <span className="px-4 py-2 bg-[#00FF66]/20 text-[#00FF66] text-sm font-semibold rounded">
@@ -368,12 +364,6 @@ export default function DemoProjectDetailPage() {
                               ❌ Refusée
                             </span>
                           )}
-                          <Link
-                            href={`/projects/${projectId}/applications/${app.id}`}
-                            className="brutalist-button px-4 py-2 text-sm"
-                          >
-                            Voir profil
-                          </Link>
                         </div>
                       </div>
                     </div>

@@ -109,9 +109,9 @@ export default function DemoOrgaDashboardPage() {
             <p className="text-sm text-[#A0A0A0]">Consultez les événements disponibles et postulez</p>
           </Link>
 
-          <Link href="/messages" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
-            <h3 className="text-xl font-bold mb-2">💬 Messages</h3>
-            <p className="text-sm text-[#A0A0A0]">Communiquez avec les BDE</p>
+          <Link href="/rental" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
+            <h3 className="text-xl font-bold mb-2">🎬 Louer du Matériel</h3>
+            <p className="text-sm text-[#A0A0A0]">Parcourez le catalogue de matériel disponible</p>
           </Link>
         </div>
 
