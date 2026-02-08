@@ -2,52 +2,134 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { getProjectById } from '@/lib/utils/projects';
+import { createApplication } from '@/lib/utils/projects';
+import type { Project } from '@/types';
 
-export default function DemoApplyPage() {
+export default function ApplyPage() {
   const params = useParams();
   const router = useRouter();
+  const supabase = createClient();
   const projectId = params.id as string;
+
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   const [formData, setFormData] = useState({
     proposedPrice: '',
     message: '',
-    availableEquipment: '',
-    experience: '',
-    proposedVenue: '',
-    venueCapacity: '',
-    venueAddress: '',
-    photos: [] as File[],
-    portfolio: '',
-    teamSize: '',
   });
 
-  const [photoPreview, setPhotoPreview] = useState<string[]>([]);
+  // Check authentication and load project
+  useEffect(() => {
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData({ ...formData, photos: files });
+      if (!user) {
+        // Not authenticated, redirect to login
+        router.push('/login');
+        return;
+      }
 
-    // Create previews
-    const previews = files.map(file => URL.createObjectURL(file));
-    setPhotoPreview(previews);
-  };
+      setCurrentUserId(user.id);
 
-  // Mock project data
-  const mockProjects: Record<string, any> = {
-    '1': { title: 'Gala de fin d\'année 2026', budget: 15000 },
-    '2': { title: 'Festival Campus Summer', budget: 25000 },
-    '3': { title: 'Soirée d\'intégration', budget: 8000 },
-    '4': { title: 'Conférence Tech & Innovation', budget: 12000 },
-  };
+      // Check if user is ORGA (only ORGA can apply)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
 
-  const project = mockProjects[projectId];
+      if (profile?.role !== 'ORGA') {
+        setError('Seuls les Orgas peuvent postuler aux projets.');
+        setLoading(false);
+        return;
+      }
 
-  const handleSubmit = (e: React.FormEvent) => {
+      // Load project
+      const projectData = await getProjectById(supabase, projectId);
+      if (projectData) {
+        setProject(projectData);
+      } else {
+        setError('Projet non trouvé');
+      }
+
+      setLoading(false);
+    }
+
+    loadData();
+  }, [supabase, projectId, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Mode Démo : Votre candidature a été envoyée avec succès ! (Données non enregistrées)');
-    router.push('/demo/projects');
+    setSubmitting(true);
+    setError('');
+
+    if (!currentUserId) {
+      setError('Vous devez être connecté pour postuler');
+      setSubmitting(false);
+      return;
+    }
+
+    const proposedPrice = parseFloat(formData.proposedPrice);
+    if (isNaN(proposedPrice) || proposedPrice < 0) {
+      setError('Le prix proposé doit être un nombre positif');
+      setSubmitting(false);
+      return;
+    }
+
+    if (!formData.message.trim()) {
+      setError('Le message de motivation est requis');
+      setSubmitting(false);
+      return;
+    }
+
+    // Create application in Supabase
+    const application = await createApplication(
+      supabase,
+      currentUserId,
+      projectId,
+      proposedPrice,
+      formData.message
+    );
+
+    if (application) {
+      alert('✅ Candidature envoyée avec succès !');
+      router.push(`/demo/projects/${projectId}`);
+    } else {
+      setError('Erreur lors de l\'envoi de la candidature. Vous avez peut-être déjà postulé à ce projet.');
+      setSubmitting(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#7C3AED] mx-auto mb-4"></div>
+          <p className="text-[#A0A0A0]">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !project) {
+    return (
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold mb-4">{error}</h1>
+          <Link href="/demo/projects" className="text-[#7C3AED] hover:underline">
+            ← Retour aux projets
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -71,7 +153,6 @@ export default function DemoApplyPage() {
             <span className="text-white">K</span>
             <span className="text-[#7C3AED]">L</span>
             <span className="text-white">UB</span>
-            <span className="text-sm text-[#A0A0A0] ml-4">Mode Démo</span>
           </h1>
           <Link href={`/demo/projects/${projectId}`} className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour
@@ -84,6 +165,12 @@ export default function DemoApplyPage() {
           <h1 className="text-4xl font-bold mb-2">Candidater au projet</h1>
           <p className="text-xl text-[#A0A0A0]">{project.title}</p>
         </div>
+
+        {error && (
+          <div className="brutalist-card p-4 mb-6 bg-[#FF0055]/10 border-[#FF0055]">
+            <p className="text-[#FF0055]">{error}</p>
+          </div>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Form */}
@@ -104,13 +191,16 @@ export default function DemoApplyPage() {
                     className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED]"
                     placeholder="5000"
                     min="0"
+                    step="0.01"
                     required
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[#A0A0A0]">€</span>
                 </div>
-                <p className="text-xs text-[#A0A0A0] mt-2">
-                  Budget du BDE : {project.budget.toLocaleString('fr-FR')} €
-                </p>
+                {project.budget && (
+                  <p className="text-xs text-[#A0A0A0] mt-2">
+                    Budget du BDE : {project.budget.toLocaleString('fr-FR')} €
+                  </p>
+                )}
               </div>
 
               <div>
@@ -120,172 +210,13 @@ export default function DemoApplyPage() {
                 <textarea
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED] min-h-[120px]"
+                  className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED] min-h-[200px]"
                   placeholder="Présentez votre expertise, vos références et pourquoi vous êtes le meilleur choix pour ce projet..."
                   required
                 />
-              </div>
-            </div>
-
-            {/* Matériel disponible */}
-            <div className="brutalist-card p-6">
-              <h2 className="text-xl font-bold mb-4">Matériel & Équipement</h2>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Matériel que vous pouvez fournir
-                </label>
-                <textarea
-                  value={formData.availableEquipment}
-                  onChange={(e) => setFormData({ ...formData, availableEquipment: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED] min-h-[100px]"
-                  placeholder="Listez le matériel que vous possédez (son, lumière, vidéo, etc.)"
-                />
-              </div>
-            </div>
-
-            {/* Proposition de Lieu (optionnel) */}
-            <div className="brutalist-card p-6">
-              <h2 className="text-xl font-bold mb-4">Proposition de Lieu (Optionnel)</h2>
-              <p className="text-sm text-[#A0A0A0] mb-4">
-                Si vous pouvez également fournir un lieu pour l&apos;événement
-              </p>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Nom du lieu
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.proposedVenue}
-                    onChange={(e) => setFormData({ ...formData, proposedVenue: e.target.value })}
-                    className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED]"
-                    placeholder="Ex: Salle de réception Le Grand Palace"
-                  />
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Capacité
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.venueCapacity}
-                      onChange={(e) => setFormData({ ...formData, venueCapacity: e.target.value })}
-                      className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED]"
-                      placeholder="500"
-                      min="0"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">
-                      Taille de l&apos;équipe
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.teamSize}
-                      onChange={(e) => setFormData({ ...formData, teamSize: e.target.value })}
-                      className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED]"
-                      placeholder="5"
-                      min="1"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Adresse
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.venueAddress}
-                    onChange={(e) => setFormData({ ...formData, venueAddress: e.target.value })}
-                    className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED]"
-                    placeholder="123 Rue de la Fête, 75001 Paris"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Photos & Portfolio */}
-            <div className="brutalist-card p-6">
-              <h2 className="text-xl font-bold mb-4">Photos & Portfolio</h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Lien portfolio / site web
-                  </label>
-                  <input
-                    type="url"
-                    value={formData.portfolio}
-                    onChange={(e) => setFormData({ ...formData, portfolio: e.target.value })}
-                    className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED]"
-                    placeholder="https://monportfolio.com"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2">
-                    Photos de vos événements précédents
-                  </label>
-                  <div className="border-2 border-dashed border-[#1A1A1A] rounded p-6 text-center hover:border-[#7C3AED] transition-colors">
-                    <input
-                      type="file"
-                      id="photos"
-                      multiple
-                      accept="image/*"
-                      onChange={handlePhotoUpload}
-                      className="hidden"
-                    />
-                    <label htmlFor="photos" className="cursor-pointer">
-                      <div className="text-4xl mb-2">📸</div>
-                      <p className="text-sm font-semibold mb-1">
-                        Cliquez pour ajouter des photos
-                      </p>
-                      <p className="text-xs text-[#A0A0A0]">
-                        PNG, JPG jusqu&apos;à 10MB (max 5 photos)
-                      </p>
-                    </label>
-                  </div>
-
-                  {photoPreview.length > 0 && (
-                    <div className="grid grid-cols-3 gap-3 mt-4">
-                      {photoPreview.map((preview, index) => (
-                        <div
-                          key={index}
-                          className="relative aspect-square rounded overflow-hidden border border-[#1A1A1A]"
-                        >
-                          <img
-                            src={preview}
-                            alt={`Preview ${index + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Expérience */}
-            <div className="brutalist-card p-6">
-              <h2 className="text-xl font-bold mb-4">Expérience</h2>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2">
-                  Projets similaires réalisés
-                </label>
-                <textarea
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-3 focus:outline-none focus:border-[#7C3AED] min-h-[100px]"
-                  placeholder="Décrivez vos expériences pertinentes pour ce type d'événement..."
-                />
+                <p className="text-xs text-[#A0A0A0] mt-2">
+                  Décrivez votre expérience, le matériel dont vous disposez, votre équipe, etc.
+                </p>
               </div>
             </div>
 
@@ -293,9 +224,10 @@ export default function DemoApplyPage() {
             <div className="flex gap-4">
               <button
                 type="submit"
-                className="brutalist-button-primary px-8 py-3"
+                disabled={submitting}
+                className="brutalist-button-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Envoyer la candidature
+                {submitting ? 'Envoi en cours...' : 'Envoyer la candidature'}
               </button>
               <Link
                 href={`/demo/projects/${projectId}`}
@@ -330,28 +262,10 @@ export default function DemoApplyPage() {
               </ul>
             </div>
 
-            <div className="brutalist-card p-6">
-              <h3 className="text-lg font-bold mb-4">📊 Votre Profil</h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <div className="text-[#A0A0A0] mb-1">Note moyenne</div>
-                  <div className="text-2xl font-bold text-[#7C3AED]">4.7/5</div>
-                </div>
-                <div>
-                  <div className="text-[#A0A0A0] mb-1">Avis reçus</div>
-                  <div className="font-bold">12</div>
-                </div>
-                <div>
-                  <div className="text-[#A0A0A0] mb-1">Projets terminés</div>
-                  <div className="font-bold">8</div>
-                </div>
-              </div>
-            </div>
-
             <div className="brutalist-card p-6 bg-[#7C3AED]/10 border-[#7C3AED]/30">
-              <h3 className="text-sm font-bold mb-2">⭐ TOP PRESTATAIRE</h3>
+              <h3 className="text-sm font-bold mb-2">📋 Informations</h3>
               <p className="text-xs text-[#A0A0A0]">
-                Votre badge sera visible par le BDE et augmente vos chances d&apos;être sélectionné
+                Votre candidature sera visible par le BDE. Vous recevrez une notification si elle est acceptée.
               </p>
             </div>
           </div>
