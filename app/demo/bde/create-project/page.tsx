@@ -47,6 +47,8 @@ export default function DemoCreateProjectPage() {
 
     if (!isDemo && currentUserId) {
       // Production mode: Save to Supabase
+      console.log('Form data before parsing:', formData);
+
       const projectData = {
         title: formData.title,
         type: formData.type as any,
@@ -57,6 +59,9 @@ export default function DemoCreateProjectPage() {
         start_date: formData.start_date,
         end_date: formData.end_date,
       };
+
+      console.log('Parsed project data:', projectData);
+      console.log('Budget:', projectData.budget, 'Capacity:', projectData.capacity);
 
       const newProject = await createProject(supabase, currentUserId, projectData);
 

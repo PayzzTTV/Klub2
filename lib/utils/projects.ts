@@ -192,6 +192,8 @@ export async function createProject(
 
     if (error) {
       console.error('Error creating project:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error('Project data sent:', projectData);
       return null;
     }
 
@@ -276,8 +278,7 @@ export async function getProjectApplications(
         orga_profile:profiles!orga_id (
           name,
           organization_name,
-          avatar_url,
-          global_score
+          avatar_url
         )
       `)
       .eq('project_id', projectId)
@@ -321,6 +322,8 @@ export async function createApplication(
     }
 
     // Create application
+    console.log('Creating application with:', { projectId, orgaId, proposedPrice, message });
+
     const { data, error } = await supabase
       .from('project_applications')
       .insert({
@@ -335,14 +338,14 @@ export async function createApplication(
         orga_profile:profiles!orga_id (
           name,
           organization_name,
-          avatar_url,
-          global_score
+          avatar_url
         )
       `)
       .single();
 
     if (error) {
       console.error('Error creating application:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return null;
     }
 
@@ -372,8 +375,7 @@ export async function updateApplicationStatus(
         orga_profile:profiles!orga_id (
           name,
           organization_name,
-          avatar_url,
-          global_score
+          avatar_url
         )
       `)
       .single();

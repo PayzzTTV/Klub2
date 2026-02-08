@@ -343,7 +343,7 @@ export default function DemoProjectDetailPage() {
 
                 <div>
                   <div className="text-[#A0A0A0] mb-1">Candidatures</div>
-                  <div className="font-semibold">{project.applications.length}</div>
+                  <div className="font-semibold">{applications.length}</div>
                 </div>
               </div>
             </div>
