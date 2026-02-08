@@ -14,7 +14,12 @@ export default function DemoProjectsPage() {
   const [filters, setFilters] = useState({
     type: 'all',
     search: '',
+    budgetMin: '',
+    budgetMax: '',
+    location: '',
   });
+
+  const [sortBy, setSortBy] = useState<'date' | 'budget' | 'capacity'>('date');
 
   // Mock data for demo mode
   const mockProjects = [
@@ -126,13 +131,31 @@ export default function DemoProjectsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.type]); // Only reload when type filter changes
 
-  // Client-side filtering for search
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch = filters.search === '' ||
-      project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-      project.location.toLowerCase().includes(filters.search.toLowerCase());
-    return matchesSearch;
-  });
+  // Client-side filtering and sorting
+  const filteredProjects = projects
+    .filter((project) => {
+      const matchesSearch = filters.search === '' ||
+        project.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+        project.location.toLowerCase().includes(filters.search.toLowerCase()) ||
+        project.description.toLowerCase().includes(filters.search.toLowerCase());
+
+      const matchesBudgetMin = filters.budgetMin === '' || project.budget >= Number(filters.budgetMin);
+      const matchesBudgetMax = filters.budgetMax === '' || project.budget <= Number(filters.budgetMax);
+      const matchesLocation = filters.location === '' ||
+        project.location.toLowerCase().includes(filters.location.toLowerCase());
+
+      return matchesSearch && matchesBudgetMin && matchesBudgetMax && matchesLocation;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
+      } else if (sortBy === 'budget') {
+        return b.budget - a.budget;
+      } else if (sortBy === 'capacity') {
+        return b.capacity - a.capacity;
+      }
+      return 0;
+    });
 
   return (
     <div className="min-h-screen bg-[#000000] py-12 px-4">
@@ -154,15 +177,18 @@ export default function DemoProjectsPage() {
 
         {/* Filters */}
         <div className="brutalist-card p-6 mb-8">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
+          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+            🔍 Filtres de recherche
+          </h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2">
               <label className="block text-sm font-semibold mb-2">Rechercher</label>
               <input
                 type="text"
                 value={filters.search}
                 onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-2 focus:outline-none focus:border-[#7C3AED]"
-                placeholder="Nom du projet, ville..."
+                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
+                placeholder="Nom du projet, description, ville..."
               />
             </div>
 
@@ -171,7 +197,7 @@ export default function DemoProjectsPage() {
               <select
                 value={filters.type}
                 onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] rounded px-4 py-2 focus:outline-none focus:border-[#7C3AED]"
+                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
               >
                 {projectTypes.map((type) => (
                   <option key={type} value={type}>
@@ -180,12 +206,69 @@ export default function DemoProjectsPage() {
                 ))}
               </select>
             </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2">Ville</label>
+              <input
+                type="text"
+                value={filters.location}
+                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
+                placeholder="Paris, Lyon..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2">Budget minimum (€)</label>
+              <input
+                type="number"
+                value={filters.budgetMin}
+                onChange={(e) => setFilters({ ...filters, budgetMin: e.target.value })}
+                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
+                placeholder="5000"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold mb-2">Budget maximum (€)</label>
+              <input
+                type="number"
+                value={filters.budgetMax}
+                onChange={(e) => setFilters({ ...filters, budgetMax: e.target.value })}
+                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
+                placeholder="50000"
+              />
+            </div>
           </div>
+
+          {/* Reset filters button */}
+          {(filters.search || filters.type !== 'all' || filters.location || filters.budgetMin || filters.budgetMax) && (
+            <button
+              onClick={() => setFilters({ type: 'all', search: '', budgetMin: '', budgetMax: '', location: '' })}
+              className="mt-4 text-sm text-[#7C3AED] hover:text-white transition-colors"
+            >
+              ✕ Réinitialiser les filtres
+            </button>
+          )}
         </div>
 
-          {/* Projects Grid */}
-          <div className="mb-6 text-sm text-[#A0A0A0]">
-            {filteredProjects.length} projet(s) trouvé(s)
+          {/* Results header with sort */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="text-sm text-[#A0A0A0]">
+              {filteredProjects.length} projet(s) trouvé(s)
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-[#A0A0A0]">Trier par:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'date' | 'budget' | 'capacity')}
+                className="bg-[#0A0A0A] border border-[#1A1A1A] px-3 py-1 text-sm focus:outline-none focus:border-[#7C3AED] transition-colors"
+              >
+                <option value="date">Date</option>
+                <option value="budget">Budget (décroissant)</option>
+                <option value="capacity">Capacité (décroissant)</option>
+              </select>
+            </div>
           </div>
 
           {filteredProjects.length === 0 ? (
