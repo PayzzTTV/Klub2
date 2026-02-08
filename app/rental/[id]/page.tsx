@@ -88,6 +88,23 @@ export default function RentalDetailPage() {
     loadEquipment();
   }, [supabase, equipmentId, router]);
 
+  // Check for date conflicts with existing rentals
+  const checkDateConflict = (startDate: string, endDate: string): boolean => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    return bookedDates.some(rental => {
+      // Skip cancelled rentals
+      if (rental.status === 'cancelled') return false;
+
+      const rentalStart = new Date(rental.start_date);
+      const rentalEnd = new Date(rental.end_date);
+
+      // Check if dates overlap
+      return (start <= rentalEnd && end >= rentalStart);
+    });
+  };
+
   const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -103,6 +120,23 @@ export default function RentalDetailPage() {
 
     if (!currentUserId || !equipment) {
       alert('Erreur: données manquantes');
+      return;
+    }
+
+    // Validate dates are not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(bookingData.startDate);
+
+    if (startDate < today) {
+      alert('❌ La date de début ne peut pas être dans le passé');
+      return;
+    }
+
+    // Check for date conflicts (CLIENT-SIDE VALIDATION)
+    const hasConflict = checkDateConflict(bookingData.startDate, bookingData.endDate);
+    if (hasConflict) {
+      alert('❌ Ces dates sont déjà réservées.\n\nVeuillez choisir d\'autres dates disponibles.');
       return;
     }
 

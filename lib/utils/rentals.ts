@@ -17,6 +17,43 @@ export async function createRentalRequest(
   }
 ): Promise<Rental | null> {
   try {
+    // SERVER-SIDE VALIDATION: Check for date conflicts
+    const { data: existingRentals, error: checkError } = await supabase
+      .from('rentals')
+      .select('start_date, end_date, status')
+      .eq('item_id', requestData.item_id)
+      .in('status', ['pending', 'approved', 'ongoing']);
+
+    if (checkError) {
+      console.error('Error checking existing rentals:', checkError);
+      return null;
+    }
+
+    if (existingRentals && existingRentals.length > 0) {
+      const start = new Date(requestData.start_date);
+      const end = new Date(requestData.end_date);
+
+      const hasConflict = existingRentals.some(rental => {
+        if (rental.status === 'cancelled') return false;
+
+        const rentalStart = new Date(rental.start_date);
+        const rentalEnd = new Date(rental.end_date);
+
+        // Check if dates overlap
+        return (start <= rentalEnd && end >= rentalStart);
+      });
+
+      if (hasConflict) {
+        console.error('Date conflict detected:', {
+          requestedStart: requestData.start_date,
+          requestedEnd: requestData.end_date,
+          existingRentals
+        });
+        return null;
+      }
+    }
+
+    // If no conflict, create the rental
     const { data, error } = await supabase
       .from('rentals')
       .insert({
