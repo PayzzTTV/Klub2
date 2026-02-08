@@ -384,16 +384,27 @@ export async function updateRentalStatus(
   status: 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled'
 ): Promise<boolean> {
   try {
-    const { error } = await supabase
+    console.log('Updating rental status:', { rentalId, status });
+
+    const { data, error } = await supabase
       .from('rentals')
       .update({ status })
-      .eq('id', rentalId);
+      .eq('id', rentalId)
+      .select();
 
     if (error) {
-      console.error('Error updating rental status:', error);
+      console.error('Error updating rental status:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code,
+        rentalId,
+        status
+      });
       return false;
     }
 
+    console.log('Rental status updated successfully:', data);
     return true;
   } catch (error) {
     console.error('Exception in updateRentalStatus:', error);
