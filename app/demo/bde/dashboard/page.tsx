@@ -1,53 +1,59 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-
-// Données de démo statiques
-const mockProfile = {
-  name: 'Jean Dupont',
-  organization_name: 'BDE Polytechnique',
-  location: 'Paris',
-};
-
-const mockProjects = [
-  {
-    id: '1',
-    title: 'Gala de fin d\'année 2026',
-    type: 'Gala',
-    location: 'Paris',
-    start_date: '2026-06-15',
-    status: 'published',
-    budget: 15000,
-    capacity: 500,
-  },
-  {
-    id: '2',
-    title: 'Soirée Étudiante - Rentrée',
-    type: 'Soirée',
-    location: 'Paris',
-    start_date: '2026-09-10',
-    status: 'in_progress',
-    budget: 8000,
-    capacity: 300,
-  },
-  {
-    id: '3',
-    title: 'Festival Inter-Écoles',
-    type: 'Festival',
-    location: 'Lyon',
-    start_date: '2026-05-20',
-    status: 'completed',
-    budget: 25000,
-    capacity: 1000,
-  },
-];
-
-const pendingFeedback = true; // Simule un feedback en attente
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { getBDEProjects, hasPendingFeedback } from '@/lib/utils/projects';
+import { getProfile } from '@/lib/utils/profiles';
+import { Profile, Project } from '@/types';
 
 export default function DemoBDEDashboard() {
-  const totalProjects = mockProjects.length;
-  const completedProjects = mockProjects.filter((p) => p.status === 'completed').length;
-  const activeProjects = mockProjects.filter((p) => p.status === 'in_progress').length;
+  const router = useRouter();
+  const supabase = createClient();
+
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [pendingFeedback, setPendingFeedback] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.push('/login');
+        return;
+      }
+
+      // Load data in parallel
+      const [profileData, projectsData, needsFeedback] = await Promise.all([
+        getProfile(supabase, user.id),
+        getBDEProjects(supabase, user.id),
+        hasPendingFeedback(supabase, user.id),
+      ]);
+
+      if (profileData) setProfile(profileData);
+      if (projectsData) setProjects(projectsData);
+      setPendingFeedback(needsFeedback);
+      setLoading(false);
+    }
+
+    loadDashboard();
+  }, [supabase, router]);
+
+  const totalProjects = projects.length;
+  const completedProjects = projects.filter((p) => p.status === 'completed').length;
+  const activeProjects = projects.filter((p) => p.status === 'in_progress').length;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#000000]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#000000]">
@@ -63,9 +69,9 @@ export default function DemoBDEDashboard() {
             </h1>
           </Link>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-[#A0A0A0]">{mockProfile.organization_name}</span>
+            <span className="text-sm text-[#A0A0A0]">{profile?.organization_name || 'BDE'}</span>
             <div className="w-10 h-10 bg-[#7C3AED] rounded flex items-center justify-center font-bold">
-              {mockProfile.name[0].toUpperCase()}
+              {profile?.name?.[0]?.toUpperCase() || 'B'}
             </div>
           </div>
         </div>
@@ -84,7 +90,7 @@ export default function DemoBDEDashboard() {
                 </p>
               </div>
               <Link
-                href="/demo/feedback/1"
+                href={`/demo/feedback/${projects.find(p => p.status === 'completed' && !p.feedback_given)?.id || '1'}`}
                 className="brutalist-button-primary px-6 py-2 whitespace-nowrap"
               >
                 Donner mon avis
@@ -185,8 +191,25 @@ export default function DemoBDEDashboard() {
         {/* Liste des projets récents */}
         <div>
           <h2 className="text-xl font-bold mb-4">Projets récents</h2>
-          <div className="space-y-4">
-            {mockProjects.map((project) => (
+          {projects.length === 0 ? (
+            <div className="brutalist-card p-8 text-center">
+              <div className="text-4xl mb-4">📋</div>
+              <h3 className="text-lg font-semibold mb-2">Aucun projet pour le moment</h3>
+              <p className="text-sm text-[#A0A0A0] mb-4">
+                Créez votre premier projet pour commencer à collaborer avec des prestataires
+              </p>
+              {!pendingFeedback && (
+                <Link
+                  href="/demo/bde/create-project"
+                  className="brutalist-button-primary inline-block px-6 py-2"
+                >
+                  Créer un projet
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {projects.map((project) => (
               <div
                 key={project.id}
                 className="brutalist-card p-6 hover:border-[#7C3AED] transition-all cursor-pointer"
@@ -221,6 +244,7 @@ export default function DemoBDEDashboard() {
               </div>
             ))}
           </div>
+          )}
         </div>
       </main>
     </div>

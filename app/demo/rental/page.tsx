@@ -1,9 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { getRentalItems } from '@/lib/utils/inventory';
+import { InventoryItem } from '@/types';
 
-// Mock equipment data
+// Mock equipment data (fallback for demo mode)
 const mockEquipment = [
   {
     id: '1',
@@ -118,19 +122,58 @@ const mockEquipment = [
 const categories = ['Tous', 'Son', 'Image', 'Lumière', 'Logistique'];
 
 export default function DemoRentalPage() {
+  const router = useRouter();
+  const supabase = createClient();
+
   const [selectedCategory, setSelectedCategory] = useState('Tous');
   const [searchQuery, setSearchQuery] = useState('');
+  const [equipment, setEquipment] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(true);
 
-  const filteredEquipment = mockEquipment.filter((item) => {
-    const matchesCategory = selectedCategory === 'Tous' || item.category === selectedCategory;
+  useEffect(() => {
+    async function loadEquipment() {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        setIsDemo(false);
+        const items = await getRentalItems(supabase, {
+          category: selectedCategory === 'Tous' ? undefined : selectedCategory as any,
+          availableOnly: true,
+        });
+        setEquipment(items || []);
+      } else {
+        // Not authenticated, use mock data
+        setIsDemo(true);
+        setEquipment(mockEquipment as any);
+      }
+      setLoading(false);
+    }
+
+    loadEquipment();
+  }, [selectedCategory, supabase]);
+
+  const filteredEquipment = equipment.filter((item) => {
     const matchesSearch =
       searchQuery === '' ||
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.owner.toLowerCase().includes(searchQuery.toLowerCase());
+      (item.owner && (
+        item.owner.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.owner.organization_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      ));
 
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#000000]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -233,7 +276,7 @@ export default function DemoRentalPage() {
                 {/* Image */}
                 <div className="relative aspect-video overflow-hidden bg-[#0A0A0A]">
                   <img
-                    src={item.image}
+                    src={(isDemo ? (item as any).image : item.images?.[0]) || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800'}
                     alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
@@ -264,13 +307,15 @@ export default function DemoRentalPage() {
                   <div className="flex items-center justify-between pt-4 border-t border-[#1A1A1A]">
                     <div>
                       <div className="text-2xl font-bold text-[#00FF66]">
-                        {item.dailyPrice}€
+                        {item.daily_price || (item as any).dailyPrice}€
                       </div>
                       <div className="text-xs text-[#A0A0A0]">par jour</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xs text-[#A0A0A0] mb-1">Par</div>
-                      <div className="text-sm font-semibold">{item.owner}</div>
+                      <div className="text-sm font-semibold">
+                        {item.owner?.organization_name || item.owner?.name || (item as any).owner}
+                      </div>
                     </div>
                   </div>
 
