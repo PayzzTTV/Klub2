@@ -21,7 +21,7 @@ export interface Project {
   description: string;
   start_date: string;
   end_date: string;
-  status: 'draft' | 'published' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'draft' | 'published' | 'pending_quotes' | 'in_progress' | 'completed' | 'cancelled';
   feedback_given: boolean;
   created_at: string;
   updated_at: string;
@@ -65,8 +65,8 @@ export interface CreateProjectData {
 
 /**
  * Update project status automatically based on dates:
- * - published → in_progress (when start_date is reached)
  * - in_progress → completed (when end_date is passed)
+ * Note: Published projects DO NOT auto-update. They must be manually moved to "in_progress"
  */
 export async function updateProjectStatusByDate(
   supabase: SupabaseClient,
@@ -82,15 +82,9 @@ export async function updateProjectStatusByDate(
     if (error || !project) return;
 
     const now = new Date();
-    const startDate = new Date(project.start_date);
     const endDate = new Date(project.end_date);
 
     let newStatus: string | null = null;
-
-    // published → in_progress (start date reached)
-    if (project.status === 'published' && now >= startDate) {
-      newStatus = 'in_progress';
-    }
 
     // in_progress → completed (end date passed)
     if (project.status === 'in_progress' && now > endDate) {
@@ -112,19 +106,13 @@ export async function updateProjectStatusByDate(
 
 /**
  * Batch update all projects that need status change
+ * Only updates in_progress → completed
  */
 export async function updateAllProjectStatuses(
   supabase: SupabaseClient
 ): Promise<void> {
   try {
     const now = new Date().toISOString();
-
-    // Update published → in_progress (start_date reached)
-    await supabase
-      .from('projects')
-      .update({ status: 'in_progress' })
-      .eq('status', 'published')
-      .lte('start_date', now);
 
     // Update in_progress → completed (end_date passed)
     await supabase

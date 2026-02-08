@@ -135,23 +135,9 @@ export default function DemoProjectsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#000000]">
-      {/* Header */}
-      <header className="brutalist-border border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tighter">
-            <span className="text-white">K</span>
-            <span className="text-[#7C3AED]">L</span>
-            <span className="text-white">UB</span>
-            {isDemo && <span className="text-sm text-[#A0A0A0] ml-4">(Mode Démo)</span>}
-          </h1>
-          <Link href="/demo" className="text-sm text-[#A0A0A0] hover:text-white">
-            ← Retour
-          </Link>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-4 py-12">
+    <div className="min-h-screen bg-[#000000] py-12 px-4">
+      <div className="max-w-7xl mx-auto">
+      
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Projets Disponibles</h1>
           <p className="text-[#A0A0A0]">Découvrez les événements à venir et postulez en tant qu&apos;ORGA</p>
@@ -274,7 +260,7 @@ export default function DemoProjectsPage() {
           )}
         </>
         )}
-      </main>
+      </div>
     </div>
   );
 }
