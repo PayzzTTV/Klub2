@@ -5,8 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getOrgaStats, isTopProvider as checkTopProvider } from '@/lib/utils/profiles';
-import { getOrgaReviews } from '@/lib/utils/reviews';
-import { Review } from '@/types';
+import { getOrgaReviews, ReviewWithRelations } from '@/lib/utils/reviews';
 
 export default function DemoOrgaDashboardPage() {
   const router = useRouter();
@@ -18,7 +17,7 @@ export default function DemoOrgaDashboardPage() {
     activeApplications: 0,
     completedProjects: 0,
   });
-  const [recentReviews, setRecentReviews] = useState<Review[]>([]);
+  const [recentReviews, setRecentReviews] = useState<ReviewWithRelations[]>([]);
   const [isTopProvider, setIsTopProvider] = useState(false);
   const [loading, setLoading] = useState(true);
 

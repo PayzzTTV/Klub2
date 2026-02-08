@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import { getProjectById, getProjectApplications, updateProjectStatusByDate } from '@/lib/utils/projects';
-import type { Project, ProjectApplication } from '@/types';
+import { getProjectById, getProjectApplications, updateProjectStatusByDate, ProjectApplicationWithProfile } from '@/lib/utils/projects';
+import type { Project } from '@/types';
 
 export default function BDEProjectDetailPage() {
   const params = useParams();
@@ -14,7 +14,7 @@ export default function BDEProjectDetailPage() {
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
-  const [applications, setApplications] = useState<ProjectApplication[]>([]);
+  const [applications, setApplications] = useState<ProjectApplicationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -264,11 +264,11 @@ export default function BDEProjectDetailPage() {
           <div className="grid md:grid-cols-3 gap-6 mb-6">
             <div>
               <div className="text-xs text-[#A0A0A0] mb-1">Budget</div>
-              <div className="text-xl font-bold">{project.budget.toLocaleString('fr-FR')} €</div>
+              <div className="text-xl font-bold">{project.budget?.toLocaleString('fr-FR') || '0'} €</div>
             </div>
             <div>
               <div className="text-xs text-[#A0A0A0] mb-1">Capacité</div>
-              <div className="text-xl font-bold">{project.capacity} pers.</div>
+              <div className="text-xl font-bold">{project.capacity || 0} pers.</div>
             </div>
             <div>
               <div className="text-xs text-[#A0A0A0] mb-1">Candidatures</div>
@@ -318,7 +318,7 @@ export default function BDEProjectDetailPage() {
               </div>
               <div className="text-right">
                 <div className="text-2xl font-bold text-[#00FF66]">
-                  {acceptedApplication.proposed_price.toLocaleString('fr-FR')} €
+                  {acceptedApplication.proposed_price?.toLocaleString('fr-FR') || '0'} €
                 </div>
                 <div className="text-xs text-[#A0A0A0] mt-1">Prix proposé</div>
               </div>
@@ -352,7 +352,7 @@ export default function BDEProjectDetailPage() {
                     </div>
                     <div className="text-right ml-6">
                       <div className="text-2xl font-bold text-[#7C3AED]">
-                        {app.proposed_price.toLocaleString('fr-FR')} €
+                        {app.proposed_price?.toLocaleString('fr-FR') || '0'} €
                       </div>
                       <div className="text-xs text-[#A0A0A0] mt-1">Prix proposé</div>
                     </div>
@@ -395,7 +395,7 @@ export default function BDEProjectDetailPage() {
                     </div>
                     <div className="text-right">
                       <div className="text-lg font-bold">
-                        {app.proposed_price.toLocaleString('fr-FR')} €
+                        {app.proposed_price?.toLocaleString('fr-FR') || '0'} €
                       </div>
                     </div>
                   </div>

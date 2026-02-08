@@ -1,18 +1,30 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { InventoryItem, InventoryCategory } from '@/types';
 
+export type InventoryItemWithOwner = InventoryItem & {
+  owner?: {
+    id: string;
+    name: string;
+    organization_name?: string;
+    avatar_url?: string;
+    role: string;
+    location?: string;
+    phone?: string;
+  };
+};
+
 /**
  * Get rental items with optional filters
  */
 export async function getRentalItems(
   supabase: SupabaseClient,
   filters?: {
-    category?: InventoryCategory;
+    category?: InventoryCategory | 'all';
     search?: string;
     ownerId?: string;
     availableOnly?: boolean;
   }
-): Promise<InventoryItem[]> {
+): Promise<InventoryItemWithOwner[]> {
   try {
     let query = supabase
       .from('inventory')
@@ -52,7 +64,7 @@ export async function getRentalItems(
       return [];
     }
 
-    return data as InventoryItem[];
+    return data as InventoryItemWithOwner[];
   } catch (error) {
     console.error('Exception in getRentalItems:', error);
     return [];
@@ -65,7 +77,7 @@ export async function getRentalItems(
 export async function getRentalItemById(
   supabase: SupabaseClient,
   itemId: string
-): Promise<InventoryItem | null> {
+): Promise<InventoryItemWithOwner | null> {
   try {
     const { data, error } = await supabase
       .from('inventory')
@@ -89,7 +101,7 @@ export async function getRentalItemById(
       return null;
     }
 
-    return data as InventoryItem;
+    return data as InventoryItemWithOwner;
   } catch (error) {
     console.error('Exception in getRentalItemById:', error);
     return null;
@@ -112,7 +124,7 @@ export async function createRentalItem(
     specifications?: Record<string, any>;
     location: string;
   }
-): Promise<InventoryItem | null> {
+): Promise<InventoryItemWithOwner | null> {
   try {
     const { data, error } = await supabase
       .from('inventory')
@@ -136,7 +148,7 @@ export async function createRentalItem(
       return null;
     }
 
-    return data as InventoryItem;
+    return data as InventoryItemWithOwner;
   } catch (error) {
     console.error('Exception in createRentalItem:', error);
     return null;
@@ -150,7 +162,7 @@ export async function updateRentalItem(
   supabase: SupabaseClient,
   itemId: string,
   updates: Partial<InventoryItem>
-): Promise<InventoryItem | null> {
+): Promise<InventoryItemWithOwner | null> {
   try {
     const { data, error } = await supabase
       .from('inventory')
@@ -164,7 +176,7 @@ export async function updateRentalItem(
       return null;
     }
 
-    return data as InventoryItem;
+    return data as InventoryItemWithOwner;
   } catch (error) {
     console.error('Exception in updateRentalItem:', error);
     return null;

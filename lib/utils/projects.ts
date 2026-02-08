@@ -5,26 +5,13 @@
 // ============================================================================
 
 import { SupabaseClient } from '@supabase/supabase-js';
+import { Project, ProjectApplication } from '@/types';
 
 // ============================================================================
-// TYPES
+// EXTENDED TYPES FOR UTILITIES
 // ============================================================================
 
-export interface Project {
-  id: string;
-  bde_id: string;
-  title: string;
-  type: 'Gala' | 'Soirée' | 'Festival' | 'Conférence' | 'Autre';
-  budget: number;
-  capacity: number;
-  location: string;
-  description: string;
-  start_date: string;
-  end_date: string;
-  status: 'draft' | 'published' | 'pending_quotes' | 'in_progress' | 'completed' | 'cancelled';
-  feedback_given: boolean;
-  created_at: string;
-  updated_at: string;
+export interface ProjectWithProfile extends Project {
   bde_profile?: {
     name: string;
     organization_name: string;
@@ -32,14 +19,7 @@ export interface Project {
   };
 }
 
-export interface ProjectApplication {
-  id: string;
-  project_id: string;
-  orga_id: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  proposed_price: number;
-  message: string;
-  created_at: string;
+export interface ProjectApplicationWithProfile extends ProjectApplication {
   orga_profile?: {
     name: string;
     organization_name: string;
@@ -337,7 +317,7 @@ export async function deleteProject(
 export async function getProjectApplications(
   supabase: SupabaseClient,
   projectId: string
-): Promise<ProjectApplication[]> {
+): Promise<ProjectApplicationWithProfile[]> {
   try {
     const { data, error } = await supabase
       .from('project_applications')
@@ -357,7 +337,7 @@ export async function getProjectApplications(
       return [];
     }
 
-    return data as ProjectApplication[];
+    return data as ProjectApplicationWithProfile[];
   } catch (error) {
     console.error('Error in getProjectApplications:', error);
     return [];
@@ -374,7 +354,7 @@ export async function createApplication(
   projectId: string,
   proposedPrice: number,
   message: string
-): Promise<ProjectApplication | null> {
+): Promise<ProjectApplicationWithProfile | null> {
   try {
     // Check if already applied
     const { data: existingApp } = await supabase
@@ -417,7 +397,7 @@ export async function createApplication(
       return null;
     }
 
-    return data as ProjectApplication;
+    return data as ProjectApplicationWithProfile;
   } catch (error) {
     console.error('Error in createApplication:', error);
     return null;
@@ -432,7 +412,7 @@ export async function updateApplicationStatus(
   supabase: SupabaseClient,
   applicationId: string,
   status: 'accepted' | 'rejected'
-): Promise<ProjectApplication | null> {
+): Promise<ProjectApplicationWithProfile | null> {
   try {
     const { data, error } = await supabase
       .from('project_applications')
@@ -453,7 +433,7 @@ export async function updateApplicationStatus(
       return null;
     }
 
-    return data as ProjectApplication;
+    return data as ProjectApplicationWithProfile;
   } catch (error) {
     console.error('Error in updateApplicationStatus:', error);
     return null;
@@ -467,7 +447,7 @@ export async function updateApplicationStatus(
 export async function getOrgaApplications(
   supabase: SupabaseClient,
   orgaId: string
-): Promise<ProjectApplication[]> {
+): Promise<ProjectApplicationWithProfile[]> {
   try {
     const { data, error } = await supabase
       .from('project_applications')

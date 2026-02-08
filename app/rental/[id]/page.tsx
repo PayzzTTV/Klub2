@@ -1,113 +1,89 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import DateRangePicker from '@/components/ui/DateRangePicker';
+import { createClient } from '@/lib/supabase/client';
+import { getRentalItemById } from '@/lib/utils/inventory';
+import { createRentalRequest } from '@/lib/utils/rentals';
+import { getOrgaStats } from '@/lib/utils/profiles';
+import type { InventoryItem } from '@/types';
 
-// Mock equipment data (same as catalog)
-const mockEquipment: Record<string, any> = {
-  '1': {
-    id: '1',
-    title: 'Système Son Professionnel 15kW',
-    category: 'Son',
-    owner: 'SoundTech Events',
-    ownerId: 'orga-1',
-    ownerRating: 4.8,
-    ownerReviews: 15,
-    dailyPrice: 350,
-    quantity: 2,
-    available: true,
-    location: 'Paris',
-    images: [
-      'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800',
-      'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=800',
-      'https://images.unsplash.com/photo-1487180144351-b8472da7d491?w=800',
-    ],
-    description: 'Système de sonorisation professionnel complet, idéal pour événements de 300 à 500 personnes. Inclut enceintes, amplificateurs, table de mixage et câblage complet.',
-    specifications: {
-      puissance: '15kW RMS',
-      capacite: '500 personnes',
-      configuration: '2x Sub 18" + 4x Tops 12"',
-      marque: 'RCF / QSC',
-      table: 'Behringer X32',
-      cables: 'Câblage XLR complet',
-    },
-    included: [
-      '2 Subwoofers 18 pouces (2000W chacun)',
-      '4 Enceintes tops 12 pouces (1500W chacune)',
-      'Console de mixage numérique 32 canaux',
-      '2 Amplificateurs numériques',
-      'Câblage XLR complet (50m)',
-      'Pieds et structures',
-      'Technicien disponible (+150€/jour)',
-    ],
-    terms: [
-      'Caution: 1000€',
-      'Installation et démontage inclus (Paris intra-muros)',
-      'Assurance obligatoire',
-      'Minimum 1 jour de location',
-      'Réduction -10% à partir de 3 jours',
-    ],
-  },
-  '2': {
-    id: '2',
-    title: 'Pack Lumière LED RGB - 12 projecteurs',
-    category: 'Lumière',
-    owner: 'LightShow Pro',
-    ownerId: 'orga-2',
-    ownerRating: 4.9,
-    ownerReviews: 23,
-    dailyPrice: 280,
-    quantity: 1,
-    available: true,
-    location: 'Lyon',
-    images: [
-      'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800',
-      'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800',
-    ],
-    description: 'Pack complet de 12 projecteurs LED RGB avec console DMX. Parfait pour créer des ambiances lumineuses professionnelles.',
-    specifications: {
-      type: 'LED RGB',
-      nombre: '12 projecteurs PAR64',
-      puissance: '200W par projecteur',
-      console: 'Console DMX 512',
-      controle: 'DMX + Mode auto',
-    },
-    included: [
-      '12 projecteurs LED RGB PAR64',
-      'Console DMX 512 canaux',
-      'Câblage DMX complet',
-      'Câbles d\'alimentation',
-      'Pieds et structures',
-      'Flight cases de transport',
-    ],
-    terms: [
-      'Caution: 500€',
-      'Transport non inclus',
-      'Installation sur demande (+100€)',
-      'Mode d\'emploi fourni',
-    ],
-  },
+type InventoryItemWithOwner = InventoryItem & {
+  owner?: {
+    id: string;
+    name: string;
+    organization_name?: string;
+    avatar_url?: string;
+    role: string;
+    location?: string;
+  };
 };
 
-export default function DemoRentalDetailPage() {
+export default function RentalDetailPage() {
   const params = useParams();
   const router = useRouter();
   const equipmentId = params.id as string;
-  const equipment = mockEquipment[equipmentId] || mockEquipment['1'];
+  const supabase = createClient();
+
+  const [equipment, setEquipment] = useState<InventoryItemWithOwner | null>(null);
+  const [ownerStats, setOwnerStats] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [error, setError] = useState('');
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [showBookingForm, setShowBookingForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const [bookingData, setBookingData] = useState({
-    startDate: null as Date | null,
-    endDate: null as Date | null,
+    startDate: '',
+    endDate: '',
     message: '',
     acceptTerms: false,
   });
 
-  const handleSubmitBooking = (e: React.FormEvent) => {
+  // Load equipment data
+  useEffect(() => {
+    async function loadEquipment() {
+      try {
+        setLoading(true);
+
+        // Get current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          router.push('/login');
+          return;
+        }
+        setCurrentUserId(user.id);
+
+        // Load equipment
+        const equipmentData = await getRentalItemById(supabase, equipmentId) as InventoryItemWithOwner;
+        if (!equipmentData) {
+          setError('Équipement non trouvé');
+          setLoading(false);
+          return;
+        }
+        setEquipment(equipmentData);
+
+        // Load owner stats if ORGA
+        if (equipmentData.owner?.role === 'ORGA') {
+          const stats = await getOrgaStats(supabase, equipmentData.owner_id);
+          setOwnerStats(stats);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error loading equipment:', err);
+        setError('Erreur lors du chargement');
+        setLoading(false);
+      }
+    }
+
+    loadEquipment();
+  }, [supabase, equipmentId, router]);
+
+  const handleSubmitBooking = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!bookingData.startDate || !bookingData.endDate) {
@@ -120,20 +96,100 @@ export default function DemoRentalDetailPage() {
       return;
     }
 
+    if (!currentUserId || !equipment) {
+      alert('Erreur: données manquantes');
+      return;
+    }
+
+    // Calculate days and total price
     const days = Math.ceil(
       (new Date(bookingData.endDate).getTime() - new Date(bookingData.startDate).getTime()) /
         (1000 * 60 * 60 * 24)
-    );
+    ) + 1; // +1 pour inclure le jour de fin
 
-    const totalPrice = days * equipment.dailyPrice;
+    const totalPrice = days * equipment.daily_price;
 
-    alert(
-      `✅ Demande de location envoyée!\n\nDurée: ${days} jour(s)\nTotal: ${totalPrice}€\n\n${equipment.owner} recevra votre demande et vous contactera.`
-    );
+    setSubmitting(true);
 
-    setShowBookingForm(false);
-    setBookingData({ startDate: '', endDate: '', message: '', acceptTerms: false });
+    try {
+      const rental = await createRentalRequest(supabase, {
+        item_id: equipmentId,
+        renter_id: currentUserId,
+        owner_id: equipment.owner_id,
+        start_date: bookingData.startDate,
+        end_date: bookingData.endDate,
+        total_price: totalPrice,
+        message: bookingData.message,
+      });
+
+      if (!rental) {
+        alert('❌ Erreur lors de l\'envoi de la demande');
+        setSubmitting(false);
+        return;
+      }
+
+      alert(
+        `✅ Demande de location envoyée!\n\nDurée: ${days} jour(s)\nTotal: ${totalPrice}€\n\nLe propriétaire recevra votre demande et vous contactera.`
+      );
+
+      // Reset form
+      setShowBookingForm(false);
+      setBookingData({ startDate: '', endDate: '', message: '', acceptTerms: false });
+      setSubmitting(false);
+    } catch (err) {
+      console.error('Error creating rental request:', err);
+      alert('❌ Erreur lors de l\'envoi de la demande');
+      setSubmitting(false);
+    }
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin text-4xl mb-4">⏳</div>
+          <p className="text-[#A0A0A0]">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !equipment) {
+    return (
+      <div className="min-h-screen bg-black text-white">
+        <header className="border-b border-[#1A1A1A] px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link href="/rental" className="text-sm text-[#A0A0A0] hover:text-white">
+              ← Retour au catalogue
+            </Link>
+            <Link href="/demo" className="text-2xl font-bold">
+              KLUB
+            </Link>
+          </div>
+        </header>
+        <main className="max-w-7xl mx-auto px-6 py-12">
+          <div className="brutalist-card bg-[#FF0055]/10 border-[#FF0055] p-6">
+            <div className="flex items-start gap-4">
+              <div className="text-4xl">❌</div>
+              <div>
+                <h2 className="text-xl font-bold text-[#FF0055] mb-2">Erreur</h2>
+                <p className="text-sm text-[#A0A0A0]">{error || 'Équipement non trouvé'}</p>
+                <Link href="/rental" className="brutalist-button inline-block mt-4 px-6 py-2">
+                  Retour au Catalogue
+                </Link>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const ownerName = equipment.owner?.organization_name || equipment.owner?.name || 'Propriétaire';
+  const ownerRating = ownerStats?.average_rating || 0;
+  const ownerReviewCount = ownerStats?.total_reviews || 0;
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -156,11 +212,17 @@ export default function DemoRentalDetailPage() {
             {/* Main Image */}
             <div className="brutalist-card overflow-hidden mb-4">
               <div className="relative aspect-video bg-[#0A0A0A]">
-                <img
-                  src={equipment.images[selectedImage]}
-                  alt={equipment.title}
-                  className="w-full h-full object-cover"
-                />
+                {equipment.images && equipment.images.length > 0 ? (
+                  <img
+                    src={equipment.images[selectedImage]}
+                    alt={equipment.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-[#A0A0A0]">
+                    <span className="text-6xl">📦</span>
+                  </div>
+                )}
                 {!equipment.available && (
                   <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
                     <span className="px-6 py-3 bg-[#FF0055] text-white font-bold text-lg rounded">
@@ -172,7 +234,7 @@ export default function DemoRentalDetailPage() {
             </div>
 
             {/* Thumbnail Gallery */}
-            {equipment.images.length > 1 && (
+            {equipment.images && equipment.images.length > 1 && (
               <div className="grid grid-cols-4 gap-3">
                 {equipment.images.map((image: string, index: number) => (
                   <button
@@ -189,19 +251,21 @@ export default function DemoRentalDetailPage() {
             )}
 
             {/* Specifications */}
-            <div className="brutalist-card p-6 mt-6">
-              <h2 className="text-xl font-bold mb-4">Spécifications Techniques</h2>
-              <div className="space-y-3">
-                {Object.entries(equipment.specifications).map(([key, value]: [string, any]) => (
-                  <div key={key} className="flex items-start justify-between pb-3 border-b border-[#1A1A1A] last:border-0">
-                    <span className="text-sm text-[#A0A0A0] capitalize">
-                      {key.replace(/_/g, ' ')}
-                    </span>
-                    <span className="text-sm font-semibold text-right">{value}</span>
-                  </div>
-                ))}
+            {equipment.specifications && Object.keys(equipment.specifications).length > 0 && (
+              <div className="brutalist-card p-6 mt-6">
+                <h2 className="text-xl font-bold mb-4">Spécifications Techniques</h2>
+                <div className="space-y-3">
+                  {Object.entries(equipment.specifications).map(([key, value]: [string, any]) => (
+                    <div key={key} className="flex items-start justify-between pb-3 border-b border-[#1A1A1A] last:border-0">
+                      <span className="text-sm text-[#A0A0A0] capitalize">
+                        {key.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-sm font-semibold text-right">{String(value)}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Right Column - Details */}
@@ -212,7 +276,9 @@ export default function DemoRentalDetailPage() {
                 <span className="px-3 py-1 bg-[#7C3AED] text-white text-sm font-semibold rounded">
                   {equipment.category}
                 </span>
-                <span className="text-sm text-[#A0A0A0]">📍 {equipment.location}</span>
+                {equipment.location && (
+                  <span className="text-sm text-[#A0A0A0]">📍 {equipment.location}</span>
+                )}
               </div>
 
               <h1 className="text-3xl font-bold mb-4">{equipment.title}</h1>
@@ -223,17 +289,21 @@ export default function DemoRentalDetailPage() {
               <div className="flex items-center justify-between pb-6 border-b border-[#1A1A1A]">
                 <div>
                   <p className="text-sm text-[#A0A0A0] mb-1">Propriétaire</p>
-                  <p className="font-semibold">{equipment.owner}</p>
+                  <p className="font-semibold">{ownerName}</p>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[#7C3AED] font-bold">★ {equipment.ownerRating}</span>
-                    <span className="text-sm text-[#A0A0A0]">({equipment.ownerReviews} avis)</span>
+                {ownerReviewCount > 0 && (
+                  <div className="text-right">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[#7C3AED] font-bold">★ {ownerRating.toFixed(1)}</span>
+                      <span className="text-sm text-[#A0A0A0]">({ownerReviewCount} avis)</span>
+                    </div>
+                    {equipment.owner && (
+                      <Link href={`/orga/${equipment.owner_id}`} className="text-sm text-[#7C3AED] hover:underline">
+                        Voir le profil →
+                      </Link>
+                    )}
                   </div>
-                  <Link href={`/orga/${equipment.ownerId}`} className="text-sm text-[#7C3AED] hover:underline">
-                    Voir le profil →
-                  </Link>
-                </div>
+                )}
               </div>
             </div>
 
@@ -242,7 +312,7 @@ export default function DemoRentalDetailPage() {
               <div className="flex items-end justify-between mb-4">
                 <div>
                   <p className="text-sm text-[#A0A0A0] mb-1">Tarif journalier</p>
-                  <p className="text-4xl font-bold text-[#00FF66]">{equipment.dailyPrice}€</p>
+                  <p className="text-4xl font-bold text-[#00FF66]">{equipment.daily_price}€</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-[#A0A0A0]">Disponible</p>
@@ -320,37 +390,52 @@ export default function DemoRentalDetailPage() {
 
                 <button
                   type="submit"
-                  className="brutalist-button-primary w-full py-3"
-                  disabled={!bookingData.acceptTerms}
+                  disabled={!bookingData.acceptTerms || submitting}
+                  className={`brutalist-button-primary w-full py-3 ${
+                    !bookingData.acceptTerms || submitting ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
                 >
-                  Envoyer la demande
+                  {submitting ? 'Envoi en cours...' : 'Envoyer la demande'}
                 </button>
               </form>
             )}
 
-            {/* What's Included */}
+            {/* Rental Info */}
             <div className="brutalist-card p-6 mb-6">
-              <h3 className="text-lg font-bold mb-4">Inclus dans la location</h3>
+              <h3 className="text-lg font-bold mb-4">Conditions de Location</h3>
               <ul className="space-y-2">
-                {equipment.included.map((item: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3 text-sm">
-                    <span className="text-[#00FF66]">✓</span>
-                    <span className="text-[#A0A0A0]">{item}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Terms & Conditions */}
-            <div className="brutalist-card p-6">
-              <h3 className="text-lg font-bold mb-4">Conditions</h3>
-              <ul className="space-y-2">
-                {equipment.terms.map((term: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3 text-sm">
+                <li className="flex items-start gap-3 text-sm">
+                  <span className="text-[#7C3AED]">•</span>
+                  <span className="text-[#A0A0A0]">
+                    Durée minimum: {equipment.min_rental_days} jour(s)
+                  </span>
+                </li>
+                {equipment.max_rental_days && (
+                  <li className="flex items-start gap-3 text-sm">
                     <span className="text-[#7C3AED]">•</span>
-                    <span className="text-[#A0A0A0]">{term}</span>
+                    <span className="text-[#A0A0A0]">
+                      Durée maximum: {equipment.max_rental_days} jour(s)
+                    </span>
                   </li>
-                ))}
+                )}
+                <li className="flex items-start gap-3 text-sm">
+                  <span className="text-[#7C3AED]">•</span>
+                  <span className="text-[#A0A0A0]">
+                    État: {equipment.condition}
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 text-sm">
+                  <span className="text-[#7C3AED]">•</span>
+                  <span className="text-[#A0A0A0]">
+                    Le propriétaire confirmera votre demande sous 24h
+                  </span>
+                </li>
+                <li className="flex items-start gap-3 text-sm">
+                  <span className="text-[#7C3AED]">•</span>
+                  <span className="text-[#A0A0A0]">
+                    Caution et conditions détaillées communiquées après acceptation
+                  </span>
+                </li>
               </ul>
             </div>
           </div>

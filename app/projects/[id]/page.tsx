@@ -4,15 +4,15 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { getProjectById, getProjectApplications, Project, ProjectApplication } from '@/lib/utils/projects';
+import { getProjectById, getProjectApplications, ProjectApplicationWithProfile, ProjectWithProfile } from '@/lib/utils/projects';
 
 export default function DemoProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
   const supabase = createClient();
 
-  const [project, setProject] = useState<Project | null>(null);
-  const [applications, setApplications] = useState<ProjectApplication[]>([]);
+  const [project, setProject] = useState<ProjectWithProfile | null>(null);
+  const [applications, setApplications] = useState<ProjectApplicationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(true);
   const [userRole, setUserRole] = useState<'BDE' | 'ORGA' | null>(null);
@@ -234,8 +234,8 @@ export default function DemoProjectDetailPage() {
                   </span>
                   <h1 className="text-4xl font-bold mb-2">{project.title}</h1>
                   <div className="flex items-center gap-2 text-[#A0A0A0]">
-                    <span className="text-2xl">{project.bdeAvatar || '🎓'}</span>
-                    <span>{project.bde_profile?.organization_name || project.bde_profile?.name || project.bdeName || 'BDE'}</span>
+                    <span className="text-2xl">🎓</span>
+                    <span>{project.bde_profile?.organization_name || project.bde_profile?.name || 'BDE'}</span>
                   </div>
                 </div>
               </div>
@@ -245,7 +245,7 @@ export default function DemoProjectDetailPage() {
                   <span className="text-2xl">💰</span>
                   <div>
                     <div className="text-sm text-[#A0A0A0]">Budget</div>
-                    <div className="font-bold text-lg">{project.budget.toLocaleString('fr-FR')} €</div>
+                    <div className="font-bold text-lg">{project.budget?.toLocaleString('fr-FR') || '0'} €</div>
                   </div>
                 </div>
 
@@ -253,7 +253,7 @@ export default function DemoProjectDetailPage() {
                   <span className="text-2xl">👥</span>
                   <div>
                     <div className="text-sm text-[#A0A0A0]">Capacité</div>
-                    <div className="font-bold text-lg">{project.capacity} personnes</div>
+                    <div className="font-bold text-lg">{project.capacity || 0} personnes</div>
                   </div>
                 </div>
 
@@ -270,7 +270,7 @@ export default function DemoProjectDetailPage() {
                   <div>
                     <div className="text-sm text-[#A0A0A0]">Date</div>
                     <div className="font-bold">
-                      {new Date(project.start_date || project.startDate).toLocaleDateString('fr-FR', {
+                      {new Date(project.start_date).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
@@ -289,14 +289,14 @@ export default function DemoProjectDetailPage() {
             </div>
 
             {/* Applications (only visible to BDE) */}
-            {((applications && applications.length > 0) || (project.applications && project.applications.length > 0)) && (
+            {applications.length > 0 && (
               <div className="brutalist-card p-8">
                 <h2 className="text-2xl font-bold mb-6">
-                  Candidatures Reçues ({applications.length || project.applications?.length || 0})
+                  Candidatures Reçues ({applications.length})
                 </h2>
 
                 <div className="space-y-4">
-                  {(applications.length > 0 ? applications : project.applications || []).map((app: any) => (
+                  {applications.map((app) => (
                     <div
                       key={app.id}
                       className="border border-[#1A1A1A] rounded p-6 hover:border-[#7C3AED]/30 transition-colors"
@@ -304,21 +304,25 @@ export default function DemoProjectDetailPage() {
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="text-lg font-bold mb-1">
-                            {app.orga_profile?.organization_name || app.orga_profile?.name || app.orgaName}
+                            {app.orga_profile?.organization_name || app.orga_profile?.name || 'ORGA'}
                           </h3>
                           <div className="flex items-center gap-3 text-sm">
-                            <span className="text-[#7C3AED] font-bold">
-                              ⭐ {app.orga_profile?.global_score || app.orgaRating}/5
-                            </span>
-                            <span className="text-[#A0A0A0]">
-                              ({app.orgaReviews || 0} avis)
-                            </span>
+                            {app.orga_profile?.global_score && (
+                              <>
+                                <span className="text-[#7C3AED] font-bold">
+                                  ⭐ {app.orga_profile.global_score.toFixed(1)}/5
+                                </span>
+                                <span className="text-[#A0A0A0]">
+                                  (noté)
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-[#A0A0A0]">Prix proposé</div>
                           <div className="text-2xl font-bold text-[#00FF66]">
-                            {(app.proposed_price || app.proposedPrice).toLocaleString('fr-FR')} €
+                            {app.proposed_price?.toLocaleString('fr-FR') || '0'} €
                           </div>
                         </div>
                       </div>
@@ -327,7 +331,7 @@ export default function DemoProjectDetailPage() {
 
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-[#A0A0A0]">
-                          Candidature reçue le {new Date(app.created_at || app.date).toLocaleDateString('fr-FR')}
+                          Candidature reçue le {new Date(app.created_at).toLocaleDateString('fr-FR')}
                         </span>
                         <div className="flex gap-2">
                           <Link
@@ -378,7 +382,7 @@ export default function DemoProjectDetailPage() {
               </div>
             )}
 
-            {applications.length === 0 && (!project.applications || project.applications.length === 0) && (
+            {applications.length === 0 && (
               <div className="brutalist-card p-8 text-center">
                 <p className="text-[#A0A0A0]">Aucune candidature pour le moment.</p>
               </div>
@@ -416,7 +420,7 @@ export default function DemoProjectDetailPage() {
 
                 <div>
                   <div className="text-[#A0A0A0] mb-1">Publié par</div>
-                  <div className="font-semibold">{project.bdeName}</div>
+                  <div className="font-semibold">{project.bde_profile?.organization_name || project.bde_profile?.name || 'BDE'}</div>
                 </div>
 
                 <div>

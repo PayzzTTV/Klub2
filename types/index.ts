@@ -66,7 +66,7 @@ export interface Project {
   status: ProjectStatus;
   feedback_given: boolean;
   selected_orga_id?: string;
-  views_count: number;
+  views_count?: number;
   created_at: string;
   updated_at: string;
 }
@@ -86,7 +86,7 @@ export interface InventoryItem {
   condition: string;
   min_rental_days: number;
   max_rental_days?: number;
-  views_count: number;
+  views_count?: number;
   created_at: string;
   updated_at: string;
 }
