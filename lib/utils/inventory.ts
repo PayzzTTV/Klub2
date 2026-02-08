@@ -274,3 +274,162 @@ export async function toggleItemAvailability(
     return false;
   }
 }
+
+/**
+ * Get rental requests for a specific owner (incoming requests)
+ */
+export async function getOwnerRentalRequests(
+  supabase: SupabaseClient,
+  ownerId: string,
+  status?: 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled'
+) {
+  try {
+    let query = supabase
+      .from('rentals')
+      .select(`
+        *,
+        item:inventory!item_id (
+          id,
+          title,
+          category,
+          daily_price,
+          images
+        ),
+        renter:profiles!renter_id (
+          id,
+          name,
+          organization_name,
+          avatar_url,
+          phone,
+          email
+        )
+      `)
+      .eq('owner_id', ownerId)
+      .order('created_at', { ascending: false });
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching owner rental requests:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Exception in getOwnerRentalRequests:', error);
+    return [];
+  }
+}
+
+/**
+ * Get rental requests made by a user (outgoing requests)
+ */
+export async function getRenterRentalRequests(
+  supabase: SupabaseClient,
+  renterId: string,
+  status?: 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled'
+) {
+  try {
+    let query = supabase
+      .from('rentals')
+      .select(`
+        *,
+        item:inventory!item_id (
+          id,
+          title,
+          category,
+          daily_price,
+          images
+        ),
+        owner:profiles!owner_id (
+          id,
+          name,
+          organization_name,
+          avatar_url,
+          phone,
+          email
+        )
+      `)
+      .eq('renter_id', renterId)
+      .order('created_at', { ascending: false });
+
+    if (status) {
+      query = query.eq('status', status);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching renter rental requests:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Exception in getRenterRentalRequests:', error);
+    return [];
+  }
+}
+
+/**
+ * Update rental status (approve, reject, complete, cancel)
+ */
+export async function updateRentalStatus(
+  supabase: SupabaseClient,
+  rentalId: string,
+  status: 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled'
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('rentals')
+      .update({ status })
+      .eq('id', rentalId);
+
+    if (error) {
+      console.error('Error updating rental status:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Exception in updateRentalStatus:', error);
+    return false;
+  }
+}
+
+/**
+ * Get rentals for a specific item (to check availability)
+ */
+export async function getItemRentals(
+  supabase: SupabaseClient,
+  itemId: string,
+  includeCompleted: boolean = false
+) {
+  try {
+    let query = supabase
+      .from('rentals')
+      .select('*')
+      .eq('item_id', itemId)
+      .order('start_date', { ascending: true });
+
+    if (!includeCompleted) {
+      query = query.in('status', ['pending', 'approved', 'ongoing']);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error('Error fetching item rentals:', error);
+      return [];
+    }
+
+    return data || [];
+  } catch (error) {
+    console.error('Exception in getItemRentals:', error);
+    return [];
+  }
+}

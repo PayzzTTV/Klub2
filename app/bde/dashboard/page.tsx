@@ -114,6 +114,14 @@ export default function DemoBDEDashboard() {
               </Link>
             )}
 
+            <Link href="/rental/manage" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
+              <div className="text-3xl mb-3">📋</div>
+              <h3 className="text-lg font-semibold mb-2">Gérer les locations</h3>
+              <p className="text-sm text-[#A0A0A0]">
+                Gérez les demandes de location de votre matériel
+              </p>
+            </Link>
+
             <Link href="/rental" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
               <div className="text-3xl mb-3">🎵</div>
               <h3 className="text-lg font-semibold mb-2">Louer du matériel</h3>
