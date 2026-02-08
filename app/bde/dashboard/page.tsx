@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { getBDEProjects, hasPendingFeedback } from '@/lib/utils/projects';
+import { getBDEProjects, hasPendingFeedback, updateAllProjectStatuses } from '@/lib/utils/projects';
 import { getProfile } from '@/lib/utils/profiles';
 import { Profile, Project } from '@/types';
 
@@ -26,6 +26,9 @@ export default function DemoBDEDashboard() {
         router.push('/login');
         return;
       }
+
+      // Update project statuses based on dates
+      await updateAllProjectStatuses(supabase);
 
       // Load data in parallel
       const [profileData, projectsData, needsFeedback] = await Promise.all([
@@ -90,7 +93,7 @@ export default function DemoBDEDashboard() {
                 </p>
               </div>
               <Link
-                href={`/demo/feedback/${projects.find(p => p.status === 'completed' && !p.feedback_given)?.id || '1'}`}
+                href={`/feedback/${projects.find(p => p.status === 'completed' && !p.feedback_given)?.id || '1'}`}
                 className="brutalist-button-primary px-6 py-2 whitespace-nowrap"
               >
                 Donner mon avis
@@ -105,13 +108,13 @@ export default function DemoBDEDashboard() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-6">
             <Link
-              href="/demo/bde/dashboard"
+              href="/bde/dashboard"
               className="py-4 border-b-2 border-[#7C3AED] text-white font-medium"
             >
               Tableau de bord
             </Link>
             <Link
-              href="/demo/projects"
+              href="/projects"
               className="py-4 border-b-2 border-transparent text-[#A0A0A0] hover:text-white transition-colors"
             >
               Mes projets
@@ -123,7 +126,7 @@ export default function DemoBDEDashboard() {
               Matériel
             </Link>
             <Link
-              href="/demo/messages"
+              href="/messages"
               className="py-4 border-b-2 border-transparent text-[#A0A0A0] hover:text-white transition-colors"
             >
               Messages
@@ -167,7 +170,7 @@ export default function DemoBDEDashboard() {
               </div>
             ) : (
               <Link
-                href="/demo/bde/create-project"
+                href="/bde/create-project"
                 className="brutalist-card p-6 hover:border-[#7C3AED] cursor-pointer transition-all"
               >
                 <div className="text-3xl mb-3">🎯</div>
@@ -178,7 +181,7 @@ export default function DemoBDEDashboard() {
               </Link>
             )}
 
-            <Link href="/demo/rental" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
+            <Link href="/rental" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
               <div className="text-3xl mb-3">🎵</div>
               <h3 className="text-lg font-semibold mb-2">Louer du matériel</h3>
               <p className="text-sm text-[#A0A0A0]">
@@ -200,7 +203,7 @@ export default function DemoBDEDashboard() {
               </p>
               {!pendingFeedback && (
                 <Link
-                  href="/demo/bde/create-project"
+                  href="/bde/create-project"
                   className="brutalist-button-primary inline-block px-6 py-2"
                 >
                   Créer un projet
@@ -210,9 +213,10 @@ export default function DemoBDEDashboard() {
           ) : (
             <div className="space-y-4">
               {projects.map((project) => (
-              <div
+              <Link
                 key={project.id}
-                className="brutalist-card p-6 hover:border-[#7C3AED] transition-all cursor-pointer"
+                href={`/bde/projects/${project.id}`}
+                className="brutalist-card p-6 hover:border-[#7C3AED] transition-all cursor-pointer block"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -241,7 +245,7 @@ export default function DemoBDEDashboard() {
                     </span>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           )}

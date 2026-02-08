@@ -120,12 +120,12 @@ export default function DemoOrgaDashboardPage() {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-2 gap-6 mb-12">
-          <Link href="/demo/projects" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
+          <Link href="/projects" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
             <h3 className="text-xl font-bold mb-2">📋 Voir les Projets</h3>
             <p className="text-sm text-[#A0A0A0]">Consultez les événements disponibles et postulez</p>
           </Link>
 
-          <Link href="/demo/messages" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
+          <Link href="/messages" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
             <h3 className="text-xl font-bold mb-2">💬 Messages</h3>
             <p className="text-sm text-[#A0A0A0]">Communiquez avec les BDE</p>
           </Link>

@@ -140,7 +140,7 @@ export default function DemoRentalDetailPage() {
       {/* Header */}
       <header className="border-b border-[#1A1A1A] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/demo/rental" className="text-sm text-[#A0A0A0] hover:text-white">
+          <Link href="/rental" className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour au catalogue
           </Link>
           <Link href="/demo" className="text-2xl font-bold">
@@ -230,7 +230,7 @@ export default function DemoRentalDetailPage() {
                     <span className="text-[#7C3AED] font-bold">★ {equipment.ownerRating}</span>
                     <span className="text-sm text-[#A0A0A0]">({equipment.ownerReviews} avis)</span>
                   </div>
-                  <Link href={`/demo/orga/${equipment.ownerId}`} className="text-sm text-[#7C3AED] hover:underline">
+                  <Link href={`/orga/${equipment.ownerId}`} className="text-sm text-[#7C3AED] hover:underline">
                     Voir le profil →
                   </Link>
                 </div>

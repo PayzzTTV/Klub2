@@ -19,7 +19,7 @@ export default function Home() {
               Démo
             </Link>
             <Link
-              href="/demo/messages"
+              href="/messages"
               className="text-sm text-[#A0A0A0] hover:text-white transition-colors"
             >
               💬 Messages
@@ -108,7 +108,7 @@ export default function Home() {
         {/* Demo Button */}
         <div className="mb-8">
           <Link
-            href="/demo/messages"
+            href="/messages"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#0A0A0A] border border-[#7C3AED] text-[#7C3AED] font-medium hover:bg-[#7C3AED] hover:text-white transition-all"
           >
             <span>💬</span>

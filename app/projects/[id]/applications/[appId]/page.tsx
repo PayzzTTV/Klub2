@@ -93,7 +93,7 @@ export default function ApplicationDetailPage() {
       <div className="min-h-screen bg-[#000000] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-4">Candidature non trouvée</h1>
-          <Link href={`/demo/projects/${projectId}`} className="text-[#7C3AED] hover:underline">
+          <Link href={`/projects/${projectId}`} className="text-[#7C3AED] hover:underline">
             ← Retour au projet
           </Link>
         </div>
@@ -114,7 +114,7 @@ export default function ApplicationDetailPage() {
             <span className="text-white">UB</span>
             <span className="text-sm text-[#A0A0A0] ml-4">Mode Démo</span>
           </h1>
-          <Link href={`/demo/projects/${projectId}`} className="text-sm text-[#A0A0A0] hover:text-white">
+          <Link href={`/projects/${projectId}`} className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour au projet
           </Link>
         </div>

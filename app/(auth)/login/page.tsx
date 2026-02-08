@@ -35,9 +35,9 @@ export default function LoginPage() {
           .single();
 
         if (profile?.role === 'BDE') {
-          router.push('/demo/bde/dashboard');
+          router.push('/bde/dashboard');
         } else {
-          router.push('/demo/projects');
+          router.push('/projects');
         }
       }
     } catch (err: any) {
