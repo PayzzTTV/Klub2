@@ -2,10 +2,19 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
+import { getProjectById, getProjectApplications, Project, ProjectApplication } from '@/lib/utils/projects';
 
 export default function DemoProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
+  const supabase = createClient();
+
+  const [project, setProject] = useState<Project | null>(null);
+  const [applications, setApplications] = useState<ProjectApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(true);
 
   // Mock data - en vrai on ferait un fetch avec l'ID
   const mockProjects: Record<string, any> = {
@@ -90,7 +99,46 @@ export default function DemoProjectDetailPage() {
     },
   };
 
-  const project = mockProjects[projectId];
+  // Load project from Supabase or use mock data
+  useEffect(() => {
+    async function loadProject() {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        setIsDemo(false);
+        const supabaseProject = await getProjectById(supabase, projectId);
+
+        if (supabaseProject) {
+          setProject(supabaseProject);
+
+          // Load applications for this project
+          const projectApps = await getProjectApplications(supabase, projectId);
+          setApplications(projectApps);
+        } else {
+          // Fallback to mock data
+          setProject(mockProjects[projectId] || null);
+        }
+      } else {
+        // Not authenticated, use mock data
+        setIsDemo(true);
+        setProject(mockProjects[projectId] || null);
+      }
+      setLoading(false);
+    }
+
+    loadProject();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#000000] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#A0A0A0]">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!project) {
     return (
@@ -114,7 +162,7 @@ export default function DemoProjectDetailPage() {
             <span className="text-white">K</span>
             <span className="text-[#7C3AED]">L</span>
             <span className="text-white">UB</span>
-            <span className="text-sm text-[#A0A0A0] ml-4">Mode Démo</span>
+            {isDemo && <span className="text-sm text-[#A0A0A0] ml-4">(Mode Démo)</span>}
           </h1>
           <Link href="/demo/projects" className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour aux projets
@@ -135,8 +183,8 @@ export default function DemoProjectDetailPage() {
                   </span>
                   <h1 className="text-4xl font-bold mb-2">{project.title}</h1>
                   <div className="flex items-center gap-2 text-[#A0A0A0]">
-                    <span className="text-2xl">{project.bdeAvatar}</span>
-                    <span>{project.bdeName}</span>
+                    <span className="text-2xl">{project.bdeAvatar || '🎓'}</span>
+                    <span>{project.bde_profile?.organization_name || project.bde_profile?.name || project.bdeName || 'BDE'}</span>
                   </div>
                 </div>
               </div>
@@ -171,7 +219,7 @@ export default function DemoProjectDetailPage() {
                   <div>
                     <div className="text-sm text-[#A0A0A0]">Date</div>
                     <div className="font-bold">
-                      {new Date(project.startDate).toLocaleDateString('fr-FR', {
+                      {new Date(project.start_date || project.startDate).toLocaleDateString('fr-FR', {
                         day: 'numeric',
                         month: 'long',
                         year: 'numeric',
@@ -190,34 +238,36 @@ export default function DemoProjectDetailPage() {
             </div>
 
             {/* Applications (only visible to BDE) */}
-            {project.applications.length > 0 && (
+            {((applications && applications.length > 0) || (project.applications && project.applications.length > 0)) && (
               <div className="brutalist-card p-8">
                 <h2 className="text-2xl font-bold mb-6">
-                  Candidatures Reçues ({project.applications.length})
+                  Candidatures Reçues ({applications.length || project.applications?.length || 0})
                 </h2>
 
                 <div className="space-y-4">
-                  {project.applications.map((app: any) => (
+                  {(applications.length > 0 ? applications : project.applications || []).map((app: any) => (
                     <div
                       key={app.id}
                       className="border border-[#1A1A1A] rounded p-6 hover:border-[#7C3AED]/30 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div>
-                          <h3 className="text-lg font-bold mb-1">{app.orgaName}</h3>
+                          <h3 className="text-lg font-bold mb-1">
+                            {app.orga_profile?.organization_name || app.orga_profile?.name || app.orgaName}
+                          </h3>
                           <div className="flex items-center gap-3 text-sm">
                             <span className="text-[#7C3AED] font-bold">
-                              ⭐ {app.orgaRating}/5
+                              ⭐ {app.orga_profile?.global_score || app.orgaRating}/5
                             </span>
                             <span className="text-[#A0A0A0]">
-                              ({app.orgaReviews} avis)
+                              ({app.orgaReviews || 0} avis)
                             </span>
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="text-sm text-[#A0A0A0]">Prix proposé</div>
                           <div className="text-2xl font-bold text-[#00FF66]">
-                            {app.proposedPrice.toLocaleString('fr-FR')} €
+                            {(app.proposed_price || app.proposedPrice).toLocaleString('fr-FR')} €
                           </div>
                         </div>
                       </div>
@@ -226,9 +276,15 @@ export default function DemoProjectDetailPage() {
 
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-[#A0A0A0]">
-                          Candidature reçue le {new Date(app.date).toLocaleDateString('fr-FR')}
+                          Candidature reçue le {new Date(app.created_at || app.date).toLocaleDateString('fr-FR')}
                         </span>
                         <div className="flex gap-2">
+                          <Link
+                            href="/demo/messages/conv-1"
+                            className="brutalist-button px-4 py-2 text-sm"
+                          >
+                            💬 Message
+                          </Link>
                           <button className="brutalist-button-primary px-4 py-2 text-sm">
                             Accepter
                           </button>
@@ -246,7 +302,7 @@ export default function DemoProjectDetailPage() {
               </div>
             )}
 
-            {project.applications.length === 0 && (
+            {applications.length === 0 && (!project.applications || project.applications.length === 0) && (
               <div className="brutalist-card p-8 text-center">
                 <p className="text-[#A0A0A0]">Aucune candidature pour le moment.</p>
               </div>

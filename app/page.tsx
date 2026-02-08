@@ -2,8 +2,46 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#000000] flex items-center justify-center px-4">
-      <main className="max-w-4xl w-full text-center animate-fade-in">
+    <div className="min-h-screen bg-[#000000]">
+      {/* Header */}
+      <header className="border-b border-[#1A1A1A]">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tighter">
+            <span className="text-white">K</span>
+            <span className="text-[#7C3AED]">L</span>
+            <span className="text-white">UB</span>
+          </h1>
+          <div className="flex items-center gap-4">
+            <Link
+              href="/demo"
+              className="text-sm text-[#A0A0A0] hover:text-white transition-colors"
+            >
+              Démo
+            </Link>
+            <Link
+              href="/demo/messages"
+              className="text-sm text-[#A0A0A0] hover:text-white transition-colors"
+            >
+              💬 Messages
+            </Link>
+            <Link
+              href="/login"
+              className="text-sm text-[#A0A0A0] hover:text-white transition-colors"
+            >
+              Connexion
+            </Link>
+            <Link
+              href="/signup"
+              className="brutalist-button-primary px-4 py-2 text-sm"
+            >
+              S'inscrire
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex items-center justify-center px-4 py-16">
+        <main className="max-w-4xl w-full text-center animate-fade-in">
         {/* Logo / Title */}
         <div className="mb-12">
           <h1 className="text-7xl font-bold tracking-tighter mb-4">
@@ -17,7 +55,7 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="grid md:grid-cols-4 gap-6 mb-12">
           <div className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
             <div className="text-3xl mb-3">🎯</div>
             <h3 className="text-lg font-semibold mb-2">Projets</h3>
@@ -35,6 +73,14 @@ export default function Home() {
           </div>
 
           <div className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
+            <div className="text-3xl mb-3">💬</div>
+            <h3 className="text-lg font-semibold mb-2">Messages</h3>
+            <p className="text-sm text-[#A0A0A0]">
+              Communiquez en temps réel avec les BDE et Orgas
+            </p>
+          </div>
+
+          <div className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
             <div className="text-3xl mb-3">⭐</div>
             <h3 className="text-lg font-semibold mb-2">Réputation</h3>
             <p className="text-sm text-[#A0A0A0]">
@@ -44,7 +90,7 @@ export default function Home() {
         </div>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
           <Link
             href="/login"
             className="brutalist-button-primary px-8 py-3 text-lg font-semibold w-full sm:w-auto"
@@ -56,6 +102,18 @@ export default function Home() {
             className="brutalist-button px-8 py-3 text-lg font-semibold w-full sm:w-auto"
           >
             Créer un compte
+          </Link>
+        </div>
+
+        {/* Demo Button */}
+        <div className="mb-8">
+          <Link
+            href="/demo/messages"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#0A0A0A] border border-[#7C3AED] text-[#7C3AED] font-medium hover:bg-[#7C3AED] hover:text-white transition-all"
+          >
+            <span>💬</span>
+            <span>Accéder aux Messages</span>
+            <span className="text-xs opacity-70">(Mode Démo)</span>
           </Link>
         </div>
 
@@ -75,6 +133,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      </div>
     </div>
   );
 }

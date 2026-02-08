@@ -1,9 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
+import { createProject } from '@/lib/utils/projects';
 
 export default function DemoCreateProjectPage() {
+  const router = useRouter();
+  const supabase = createClient();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isDemo, setIsDemo] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     type: 'Gala',
@@ -17,9 +26,53 @@ export default function DemoCreateProjectPage() {
 
   const projectTypes = ['Gala', 'Soirée', 'Festival', 'Conférence', 'Autre'];
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Check authentication
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+        setIsDemo(false);
+      } else {
+        setIsDemo(true);
+      }
+    }
+    checkAuth();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Mode Démo : Le projet a été créé avec succès ! (Données non enregistrées)');
+    setSubmitting(true);
+
+    if (!isDemo && currentUserId) {
+      // Production mode: Save to Supabase
+      const projectData = {
+        title: formData.title,
+        type: formData.type as any,
+        budget: parseFloat(formData.budget),
+        capacity: parseInt(formData.capacity),
+        location: formData.location,
+        description: formData.description,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+      };
+
+      const newProject = await createProject(supabase, currentUserId, projectData);
+
+      if (newProject) {
+        alert('✅ Projet créé avec succès !');
+        router.push(`/demo/projects/${newProject.id}`);
+      } else {
+        alert('❌ Erreur lors de la création du projet. Vérifiez vos permissions.');
+        setSubmitting(false);
+      }
+    } else {
+      // Demo mode: Just show alert
+      alert('Mode Démo : Le projet a été créé avec succès ! (Données non enregistrées)');
+      setSubmitting(false);
+      router.push('/demo/bde/dashboard');
+    }
   };
 
   return (
@@ -31,7 +84,7 @@ export default function DemoCreateProjectPage() {
             <span className="text-white">K</span>
             <span className="text-[#7C3AED]">L</span>
             <span className="text-white">UB</span>
-            <span className="text-sm text-[#A0A0A0] ml-4">Mode Démo</span>
+            {isDemo && <span className="text-sm text-[#A0A0A0] ml-4">(Mode Démo)</span>}
           </h1>
           <Link href="/demo" className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour
@@ -157,9 +210,10 @@ export default function DemoCreateProjectPage() {
           <div className="flex gap-4">
             <button
               type="submit"
-              className="brutalist-button-primary px-8 py-3"
+              disabled={submitting}
+              className="brutalist-button-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Publier le projet
+              {submitting ? 'Création en cours...' : 'Publier le projet'}
             </button>
             <Link
               href="/demo/bde/dashboard"

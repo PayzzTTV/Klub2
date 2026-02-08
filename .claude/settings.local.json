@@ -9,7 +9,17 @@
       "Bash(findstr:*)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(rd /s /q .next)",
+      "Bash(rd /s /q .next node_modules.cache)",
+      "Bash(ping:*)",
+      "Bash(ls:*)",
+      "Bash(lsof:*)",
+      "Bash(powershell -Command \"Stop-Process -Id 70080 -Force\")"
     ],
     "additionalDirectories": [
       "c:\\projet\\Klub\\app\\demo\\projects\\[id]\\applications"
