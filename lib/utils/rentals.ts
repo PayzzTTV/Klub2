@@ -17,7 +17,19 @@ export async function createRentalRequest(
   }
 ): Promise<Rental | null> {
   try {
-    // SERVER-SIDE VALIDATION: Check for date conflicts
+    // 1. Get item details (including quantity)
+    const { data: item, error: itemError } = await supabase
+      .from('inventory')
+      .select('quantity')
+      .eq('id', requestData.item_id)
+      .single();
+
+    if (itemError || !item) {
+      console.error('Error fetching item:', itemError);
+      return null;
+    }
+
+    // 2. SERVER-SIDE VALIDATION: Check for date conflicts and quantity availability
     const { data: existingRentals, error: checkError } = await supabase
       .from('rentals')
       .select('start_date, end_date, status')
@@ -33,7 +45,8 @@ export async function createRentalRequest(
       const start = new Date(requestData.start_date);
       const end = new Date(requestData.end_date);
 
-      const hasConflict = existingRentals.some(rental => {
+      // Count concurrent rentals for the requested dates
+      const concurrentRentals = existingRentals.filter(rental => {
         if (rental.status === 'cancelled') return false;
 
         const rentalStart = new Date(rental.start_date);
@@ -43,11 +56,16 @@ export async function createRentalRequest(
         return (start <= rentalEnd && end >= rentalStart);
       });
 
-      if (hasConflict) {
-        console.error('Date conflict detected:', {
+      const concurrentCount = concurrentRentals.length;
+
+      // Check if quantity is available
+      if (concurrentCount >= item.quantity) {
+        console.error('Insufficient quantity available:', {
           requestedStart: requestData.start_date,
           requestedEnd: requestData.end_date,
-          existingRentals
+          totalQuantity: item.quantity,
+          concurrentRentals: concurrentCount,
+          availableQuantity: item.quantity - concurrentCount
         });
         return null;
       }
