@@ -9,6 +9,7 @@ import {
   getRenterRentalRequests,
   updateRentalStatus,
 } from '@/lib/utils/inventory';
+import { getRentalItems } from '@/lib/utils/inventory';
 
 type RentalStatus = 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled';
 
@@ -18,10 +19,11 @@ export default function ManageRentalsPage() {
 
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing'>('incoming');
+  const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing' | 'my-items'>('incoming');
 
   const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
   const [outgoingRequests, setOutgoingRequests] = useState<any[]>([]);
+  const [myItems, setMyItems] = useState<any[]>([]);
 
   const [filterStatus, setFilterStatus] = useState<RentalStatus | 'all'>('all');
 
@@ -52,6 +54,12 @@ export default function ManageRentalsPage() {
         filterStatus === 'all' ? undefined : filterStatus
       );
       setOutgoingRequests(outgoing);
+
+      // Load my items (equipment I own)
+      const items = await getRentalItems(supabase, {
+        ownerId: user.id
+      });
+      setMyItems(items);
 
       setLoading(false);
     }
@@ -128,7 +136,11 @@ export default function ManageRentalsPage() {
     });
   };
 
-  const currentRequests = activeTab === 'incoming' ? incomingRequests : outgoingRequests;
+  const currentRequests = activeTab === 'incoming'
+    ? incomingRequests
+    : activeTab === 'outgoing'
+    ? outgoingRequests
+    : [];
 
   if (loading) {
     return (
@@ -186,27 +198,124 @@ export default function ManageRentalsPage() {
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => setActiveTab('my-items')}
+            className={`px-6 py-3 rounded border transition-all ${
+              activeTab === 'my-items'
+                ? 'bg-purple-600 border-purple-600 text-white'
+                : 'bg-transparent border-gray-800 text-gray-400 hover:border-purple-600 hover:text-white'
+            }`}
+          >
+            🎵 Mes Équipements
+            {myItems.length > 0 && (
+              <span className="ml-2 px-2 py-1 bg-purple-800 rounded text-xs">
+                {myItems.length}
+              </span>
+            )}
+          </button>
         </div>
 
-        {/* Filter by Status */}
-        <div className="mb-6 flex gap-2 overflow-x-auto">
-          {['all', 'pending', 'approved', 'ongoing', 'completed', 'cancelled'].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilterStatus(status as any)}
-              className={`px-4 py-2 rounded border whitespace-nowrap transition-all ${
-                filterStatus === status
-                  ? 'bg-purple-600 border-purple-600'
-                  : 'bg-transparent border-gray-800 hover:border-purple-600'
-              }`}
-            >
-              {status === 'all' ? 'Tous' : getStatusBadge(status)}
-            </button>
-          ))}
-        </div>
+        {/* Filter by Status - Only for incoming/outgoing tabs */}
+        {activeTab !== 'my-items' && (
+          <div className="mb-6 flex gap-2 overflow-x-auto">
+            {['all', 'pending', 'approved', 'ongoing', 'completed', 'cancelled'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status as any)}
+                className={`px-4 py-2 rounded border whitespace-nowrap transition-all ${
+                  filterStatus === status
+                    ? 'bg-purple-600 border-purple-600'
+                    : 'bg-transparent border-gray-800 hover:border-purple-600'
+                }`}
+              >
+                {status === 'all' ? 'Tous' : getStatusBadge(status)}
+              </button>
+            ))}
+          </div>
+        )}
 
-        {/* Requests List */}
-        {currentRequests.length === 0 ? (
+        {/* My Items List */}
+        {activeTab === 'my-items' && (
+          <>
+            {myItems.length === 0 ? (
+              <div className="brutalist-card p-12 text-center">
+                <div className="text-6xl mb-4">📦</div>
+                <h3 className="text-xl font-bold mb-2">Aucun équipement</h3>
+                <p className="text-gray-400">
+                  Vous n'avez pas encore ajouté d'équipement à louer
+                </p>
+                <Link href="/rental/create" className="brutalist-button mt-6 inline-block bg-purple-600 hover:bg-purple-700">
+                  ➕ Ajouter du Matériel
+                </Link>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myItems.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/rental/${item.id}`}
+                    className="brutalist-card overflow-hidden hover:border-purple-600 transition-all group"
+                  >
+                    {/* Image */}
+                    <div className="relative aspect-video overflow-hidden bg-gray-900">
+                      <img
+                        src={item.images?.[0] || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800'}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {!item.available && (
+                        <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
+                          <span className="px-4 py-2 bg-red-600 text-white font-semibold rounded">
+                            Non disponible
+                          </span>
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <span className="px-3 py-1 bg-purple-600 text-white text-xs font-semibold rounded">
+                          {item.category}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="p-4">
+                      <h3 className="font-bold text-lg mb-2 group-hover:text-purple-500 transition-colors">
+                        {item.title}
+                      </h3>
+
+                      <p className="text-sm text-gray-400 mb-4 line-clamp-2">
+                        {item.description}
+                      </p>
+
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-800">
+                        <div>
+                          <div className="text-2xl font-bold text-green-500">
+                            {item.daily_price}€
+                          </div>
+                          <div className="text-xs text-gray-400">par jour</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-xs text-gray-400 mb-1">Stock</div>
+                          <div className="text-sm font-semibold">
+                            {item.quantity} unité(s)
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                        <span>📍 {item.location}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Requests List - Only for incoming/outgoing tabs */}
+        {activeTab !== 'my-items' && (currentRequests.length === 0 ? (
           <div className="brutalist-card p-12 text-center">
             <div className="text-6xl mb-4">📭</div>
             <h3 className="text-xl font-bold mb-2">Aucune demande</h3>
@@ -356,7 +465,7 @@ export default function ManageRentalsPage() {
               </div>
             ))}
           </div>
-        )}
+        ))}
       </div>
     </div>
   );
