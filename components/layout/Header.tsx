@@ -54,14 +54,11 @@ export default function Header() {
   const navigation = user.role === 'BDE' ? [
     { name: 'Dashboard', href: '/bde/dashboard' },
     { name: 'Mes Projets', href: '/bde/projects' },
-    { name: 'Explorer', href: '/projects' },
     { name: 'Location', href: '/rental' },
-    { name: 'Messages', href: '/messages' },
   ] : [
     { name: 'Dashboard', href: '/orga/dashboard' },
     { name: 'Projets', href: '/projects' },
     { name: 'Location', href: '/rental' },
-    { name: 'Messages', href: '/messages' },
   ];
 
   return (

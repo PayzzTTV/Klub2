@@ -106,6 +106,28 @@ export default function BDEProjectDetailPage() {
     }
   };
 
+  const handleStartProject = async () => {
+    if (!confirm('⚠️ Démarrer ce projet ? Il passera en mode "En cours".')) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'in_progress' })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      // Reload project
+      const updatedProject = await getProjectById(supabase, projectId);
+      setProject(updatedProject);
+
+      alert('✅ Projet démarré !');
+    } catch (err) {
+      console.error('Error starting project:', err);
+      alert('❌ Erreur lors du démarrage');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
@@ -185,6 +207,21 @@ export default function BDEProjectDetailPage() {
               {project.status === 'draft' && '📝 Brouillon'}
             </span>
           </div>
+
+          {/* Start Project Button - Only for published or pending_quotes */}
+          {(project.status === 'published' || project.status === 'pending_quotes') && (
+            <div className="mb-6">
+              <button
+                onClick={handleStartProject}
+                className="brutalist-button-primary px-6 py-3"
+              >
+                🚀 Démarrer le projet
+              </button>
+              <p className="text-xs text-[#A0A0A0] mt-2">
+                Le projet passera en mode "En cours"
+              </p>
+            </div>
+          )}
 
           <div className="grid md:grid-cols-3 gap-6 mb-6">
             <div>

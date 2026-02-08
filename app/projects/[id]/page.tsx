@@ -387,8 +387,8 @@ export default function DemoProjectDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* CTA Card - Only for ORGA */}
-            {userRole === 'ORGA' && (
+            {/* CTA Card - Only for ORGA and NOT owner */}
+            {userRole === 'ORGA' && !isOwner && (
               <div className="brutalist-card p-6">
                 <h3 className="text-lg font-bold mb-4">Vous êtes intéressé ?</h3>
                 <Link

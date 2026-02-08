@@ -49,11 +49,20 @@ export default function BDEProjectsPage() {
     loadProjects();
   }, []);
 
-  const handleDeleteProject = async (projectId: string, e: React.MouseEvent) => {
+  const handleDeleteProject = async (projectId: string, status: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce projet ?')) return;
+    // Warning message based on status
+    const warningMessages = {
+      in_progress: '⚠️ Ce projet est EN COURS. Êtes-vous sûr de vouloir le supprimer ?',
+      completed: '⚠️ Ce projet est TERMINÉ. Voulez-vous vraiment le supprimer ?',
+      default: '⚠️ Êtes-vous sûr de vouloir supprimer ce projet ?'
+    };
+
+    const message = warningMessages[status as keyof typeof warningMessages] || warningMessages.default;
+
+    if (!confirm(message)) return;
 
     try {
       const { error } = await supabase
@@ -166,7 +175,7 @@ export default function BDEProjectsPage() {
               <div key={project.id} className="brutalist-card p-6 hover:border-[#7C3AED] transition-all relative group">
                 {/* Bouton Supprimer */}
                 <button
-                  onClick={(e) => handleDeleteProject(project.id, e)}
+                  onClick={(e) => handleDeleteProject(project.id, project.status, e)}
                   className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-[#FF0055] text-white px-3 py-1 text-xs font-semibold hover:bg-[#FF0055]/80 z-10"
                   title="Supprimer le projet"
                 >
