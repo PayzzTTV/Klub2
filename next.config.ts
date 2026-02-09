@@ -6,6 +6,19 @@ const nextConfig: NextConfig = {
   experimental: {
     turbo: undefined,
   },
+  // Image optimization for external domains
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co', // Supabase storage
+      },
+    ],
+  },
 };
 
 export default nextConfig;
