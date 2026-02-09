@@ -8,6 +8,7 @@ import { getRentalItemById, getItemRentals } from '@/lib/utils/inventory';
 import { createRentalRequest } from '@/lib/utils/rentals';
 import { getOrgaStats } from '@/lib/utils/profiles';
 import { useToast } from '@/lib/hooks/useToast';
+import Calendar from '@/components/ui/Calendar';
 import type { InventoryItem } from '@/types';
 
 type InventoryItemWithOwner = InventoryItem & {
@@ -392,33 +393,22 @@ export default function RentalDetailPage() {
               )}
             </div>
 
-            {/* Booked Dates Info */}
-            {showBookingForm && bookedDates.length > 0 && (
-              <div className="brutalist-card p-6 mb-6 bg-yellow-900/20 border-yellow-700">
-                <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-                  📅 Dates déjà réservées
+            {/* Calendar View */}
+            {showBookingForm && (
+              <div className="mb-6">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  📅 Calendrier de Disponibilité
                 </h3>
-                <div className="space-y-2 text-sm">
-                  {bookedDates.slice(0, 5).map((rental) => (
-                    <div key={rental.id} className="flex items-center justify-between text-gray-300">
-                      <span>
-                        {new Date(rental.start_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
-                        {' → '}
-                        {new Date(rental.end_date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </span>
-                      <span className="px-2 py-1 bg-yellow-700 rounded text-xs">
-                        {rental.status === 'pending' ? '⏳ Pending' : '✅ Confirmé'}
-                      </span>
-                    </div>
-                  ))}
-                  {bookedDates.length > 5 && (
-                    <p className="text-xs text-gray-400 mt-2">
-                      + {bookedDates.length - 5} autre(s) réservation(s)
-                    </p>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400 mt-3">
-                  ℹ️ Vérifiez que vos dates ne chevauchent pas ces périodes
+                <Calendar
+                  bookedDates={bookedDates}
+                  selectedRange={{
+                    start: bookingData.startDate || null,
+                    end: bookingData.endDate || null,
+                  }}
+                  minDate={new Date()}
+                />
+                <p className="text-xs text-[#A0A0A0] mt-3">
+                  ℹ️ Les dates en rouge sont déjà réservées. Les dates en orange sont en attente de confirmation.
                 </p>
               </div>
             )}
