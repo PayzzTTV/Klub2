@@ -258,8 +258,8 @@ export default function RentalDetailPage() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-12">
-        <div className="grid lg:grid-cols-2 gap-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Left Column - Images */}
           <div>
             {/* Main Image */}
@@ -288,7 +288,7 @@ export default function RentalDetailPage() {
 
             {/* Thumbnail Gallery */}
             {equipment.images && equipment.images.length > 1 && (
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-3">
                 {equipment.images.map((image: string, index: number) => (
                   <button
                     key={index}
@@ -305,8 +305,8 @@ export default function RentalDetailPage() {
 
             {/* Specifications */}
             {equipment.specifications && Object.keys(equipment.specifications).length > 0 && (
-              <div className="brutalist-card p-6 mt-6">
-                <h2 className="text-xl font-bold mb-4">Spécifications Techniques</h2>
+              <div className="brutalist-card p-4 sm:p-6 mt-6">
+                <h2 className="text-lg sm:text-xl font-bold mb-4">Spécifications Techniques</h2>
                 <div className="space-y-3">
                   {Object.entries(equipment.specifications).map(([key, value]: [string, any]) => (
                     <div key={key} className="flex items-start justify-between pb-3 border-b border-[#1A1A1A] last:border-0">
@@ -334,7 +334,7 @@ export default function RentalDetailPage() {
                 )}
               </div>
 
-              <h1 className="text-3xl font-bold mb-4">{equipment.title}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold mb-4">{equipment.title}</h1>
 
               <p className="text-[#A0A0A0] mb-6">{equipment.description}</p>
 
@@ -361,15 +361,15 @@ export default function RentalDetailPage() {
             </div>
 
             {/* Pricing */}
-            <div className="brutalist-card p-6 mb-6">
+            <div className="brutalist-card p-4 sm:p-6 mb-6">
               <div className="flex items-end justify-between mb-4">
                 <div>
-                  <p className="text-sm text-[#A0A0A0] mb-1">Tarif journalier</p>
-                  <p className="text-4xl font-bold text-[#00FF66]">{equipment.daily_price}€</p>
+                  <p className="text-xs sm:text-sm text-[#A0A0A0] mb-1">Tarif journalier</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-[#00FF66]">{equipment.daily_price}€</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-[#A0A0A0]">Disponible</p>
-                  <p className="text-sm font-semibold">{equipment.quantity} unité(s)</p>
+                  <p className="text-xs sm:text-sm text-[#A0A0A0]">Disponible</p>
+                  <p className="text-xs sm:text-sm font-semibold">{equipment.quantity} unité(s)</p>
                 </div>
               </div>
 
@@ -431,8 +431,8 @@ export default function RentalDetailPage() {
 
             {/* Booking Form */}
             {showBookingForm && (
-              <form onSubmit={handleSubmitBooking} className="brutalist-card p-6 mb-6">
-                <h3 className="text-xl font-bold mb-4">Demande de Réservation</h3>
+              <form onSubmit={handleSubmitBooking} className="brutalist-card p-4 sm:p-6 mb-6">
+                <h3 className="text-lg sm:text-xl font-bold mb-4">Demande de Réservation</h3>
 
                 <div className="space-y-4 mb-6">
                   <div>

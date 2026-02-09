@@ -66,12 +66,12 @@ export default function DemoBDEDashboard() {
   const hasPendingFeedback = pendingProjects.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#000000] py-12 px-4">
-      <main className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-[#000000] py-8 sm:py-12 px-4">
+      <main className="max-w-7xl mx-auto">
         {/* Bandeau de feedback obligatoire */}
         <FeedbackBanner projects={pendingProjects} />
         {/* Statistiques */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
           <div className="brutalist-card p-6">
             <div className="text-3xl font-bold text-[#7C3AED] mb-2">{totalProjects}</div>
             <div className="text-sm text-[#A0A0A0]">Projets créés</div>
@@ -88,8 +88,8 @@ export default function DemoBDEDashboard() {
 
         {/* Actions rapides */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">Actions rapides</h2>
-          <div className="grid md:grid-cols-2 gap-4">
+          <h2 className="text-lg sm:text-xl font-bold mb-4">Actions rapides</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {hasPendingFeedback ? (
               <div className="brutalist-card p-6 opacity-50 cursor-not-allowed transition-all">
                 <div className="text-3xl mb-3">🎯</div>
@@ -134,7 +134,7 @@ export default function DemoBDEDashboard() {
 
         {/* Liste des projets récents */}
         <div>
-          <h2 className="text-xl font-bold mb-4">Projets récents</h2>
+          <h2 className="text-lg sm:text-xl font-bold mb-4">Projets récents</h2>
           {projects.length === 0 ? (
             <div className="brutalist-card p-8 text-center">
               <div className="text-4xl mb-4">📋</div>
@@ -157,16 +157,16 @@ export default function DemoBDEDashboard() {
               <Link
                 key={project.id}
                 href={`/bde/projects/${project.id}`}
-                className="brutalist-card p-6 hover:border-[#7C3AED] transition-all cursor-pointer block"
+                className="brutalist-card p-4 sm:p-6 hover:border-[#7C3AED] transition-all cursor-pointer block"
               >
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-lg mb-2">{project.title}</h3>
-                    <div className="flex items-center gap-4 text-sm text-[#A0A0A0]">
+                    <h3 className="font-semibold text-base sm:text-lg mb-2">{project.title}</h3>
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[#A0A0A0]">
                       <span>{project.type}</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>{project.location}</span>
-                      <span>•</span>
+                      <span className="hidden sm:inline">•</span>
                       <span>{new Date(project.start_date).toLocaleDateString('fr-FR')}</span>
                     </div>
                   </div>

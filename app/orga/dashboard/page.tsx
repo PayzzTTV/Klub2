@@ -56,13 +56,13 @@ export default function DemoOrgaDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#000000] py-12 px-4">
+    <div className="min-h-screen bg-[#000000] py-8 sm:py-12 px-4">
       <main className="max-w-7xl mx-auto">
         {/* Welcome + Badge */}
-        <div className="mb-8 flex items-start justify-between">
+        <div className="mb-8 flex flex-col sm:flex-row items-start justify-between gap-4">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Dashboard ORGA</h1>
-            <p className="text-[#A0A0A0]">Gérez vos candidatures et suivez votre réputation</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Dashboard ORGA</h1>
+            <p className="text-sm sm:text-base text-[#A0A0A0]">Gérez vos candidatures et suivez votre réputation</p>
           </div>
           {isTopProvider && (
             <span className="px-4 py-2 bg-[#00FF66]/20 text-[#00FF66] text-sm font-bold rounded border border-[#00FF66]/30">
@@ -72,7 +72,7 @@ export default function DemoOrgaDashboardPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
           <div className="brutalist-card p-6">
             <div className="text-3xl font-bold text-[#7C3AED] mb-1">
               {stats.averageRating > 0 ? stats.averageRating.toFixed(1) : '0.0'}/5
@@ -103,7 +103,7 @@ export default function DemoOrgaDashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-12">
           <Link href="/projects" className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors">
             <h3 className="text-xl font-bold mb-2">📋 Voir les Projets</h3>
             <p className="text-sm text-[#A0A0A0]">Consultez les événements disponibles et postulez</p>
@@ -121,8 +121,8 @@ export default function DemoOrgaDashboardPage() {
         </div>
 
         {/* Recent Reviews */}
-        <div className="brutalist-card p-8">
-          <h2 className="text-2xl font-bold mb-6">Derniers Avis Reçus</h2>
+        <div className="brutalist-card p-4 sm:p-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-6">Derniers Avis Reçus</h2>
 
           {recentReviews.length === 0 ? (
             <p className="text-[#A0A0A0] text-center py-8">

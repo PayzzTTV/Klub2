@@ -8,18 +8,18 @@ export default function Home() {
         <main className="max-w-4xl w-full text-center animate-fade-in">
         {/* Logo / Title */}
         <div className="mb-12">
-          <h1 className="text-7xl font-bold tracking-tighter mb-4">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tighter mb-4">
             <span className="text-white">K</span>
             <span className="text-[#7C3AED]">L</span>
             <span className="text-white">UB</span>
           </h1>
-          <p className="text-xl text-[#A0A0A0] tracking-wide">
+          <p className="text-base sm:text-lg md:text-xl text-[#A0A0A0] tracking-wide">
             La plateforme collaborative pour BDE & Orgas
           </p>
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
           <div className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
             <div className="text-3xl mb-3">🎯</div>
             <h3 className="text-lg font-semibold mb-2">Projets</h3>
@@ -82,18 +82,18 @@ export default function Home() {
         </div>
 
         {/* Stats */}
-        <div className="mt-16 grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+        <div className="mt-16 grid grid-cols-3 gap-4 sm:gap-8 max-w-2xl mx-auto">
           <div>
-            <div className="text-3xl font-bold text-[#7C3AED]">100+</div>
-            <div className="text-sm text-[#A0A0A0] mt-1">BDE Inscrits</div>
+            <div className="text-2xl sm:text-3xl font-bold text-[#7C3AED]">100+</div>
+            <div className="text-xs sm:text-sm text-[#A0A0A0] mt-1">BDE Inscrits</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-[#7C3AED]">50+</div>
-            <div className="text-sm text-[#A0A0A0] mt-1">Orgas Vérifiées</div>
+            <div className="text-2xl sm:text-3xl font-bold text-[#7C3AED]">50+</div>
+            <div className="text-xs sm:text-sm text-[#A0A0A0] mt-1">Orgas Vérifiées</div>
           </div>
           <div>
-            <div className="text-3xl font-bold text-[#7C3AED]">500+</div>
-            <div className="text-sm text-[#A0A0A0] mt-1">Projets Réalisés</div>
+            <div className="text-2xl sm:text-3xl font-bold text-[#7C3AED]">500+</div>
+            <div className="text-xs sm:text-sm text-[#A0A0A0] mt-1">Projets Réalisés</div>
           </div>
         </div>
       </main>
