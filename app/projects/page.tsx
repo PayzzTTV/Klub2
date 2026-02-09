@@ -160,12 +160,12 @@ export default function DemoProjectsPage() {
     });
 
   return (
-    <div className="min-h-screen bg-[#000000] py-12 px-4">
+    <div className="min-h-screen bg-[#000000] py-8 sm:py-12 px-4">
       <div className="max-w-7xl mx-auto">
-      
+
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Projets Disponibles</h1>
-          <p className="text-[#A0A0A0]">Découvrez les événements à venir et postulez en tant qu&apos;ORGA</p>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Projets Disponibles</h1>
+          <p className="text-sm sm:text-base text-[#A0A0A0]">Découvrez les événements à venir et postulez en tant qu&apos;ORGA</p>
         </div>
 
         {loading && (
@@ -178,11 +178,11 @@ export default function DemoProjectsPage() {
           <>
 
         {/* Filters */}
-        <div className="brutalist-card p-6 mb-8">
-          <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+        <div className="brutalist-card p-4 sm:p-6 mb-8">
+          <h2 className="text-base sm:text-lg font-bold mb-4 flex items-center gap-2">
             🔍 Filtres de recherche
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="lg:col-span-2">
               <label className="block text-sm font-semibold mb-2">Rechercher</label>
               <input
@@ -255,7 +255,7 @@ export default function DemoProjectsPage() {
         </div>
 
           {/* Results header with sort */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="text-sm text-[#A0A0A0]">
               {filteredProjects.length} projet(s) trouvé(s)
             </div>
@@ -278,20 +278,20 @@ export default function DemoProjectsPage() {
               <p className="text-[#A0A0A0]">Aucun projet ne correspond à vos critères.</p>
             </div>
           ) : (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
               {filteredProjects.map((project) => (
                 <div
                   key={project.id}
-                  className="brutalist-card p-6 hover:border-[#7C3AED] transition-colors"
+                  className="brutalist-card p-4 sm:p-6 hover:border-[#7C3AED] transition-colors"
                 >
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold mb-1">{project.title}</h3>
-                      <p className="text-sm text-[#A0A0A0]">
+                  <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg sm:text-xl font-bold mb-1">{project.title}</h3>
+                      <p className="text-xs sm:text-sm text-[#A0A0A0]">
                         {project.bde_profile?.organization_name || project.bde_profile?.name || 'BDE'}
                       </p>
                     </div>
-                    <span className="px-3 py-1 bg-[#7C3AED]/20 text-[#7C3AED] text-xs font-bold rounded">
+                    <span className="px-3 py-1 bg-[#7C3AED]/20 text-[#7C3AED] text-xs font-bold rounded whitespace-nowrap">
                       {project.type}
                     </span>
                   </div>

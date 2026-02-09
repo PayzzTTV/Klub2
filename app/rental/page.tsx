@@ -175,17 +175,17 @@ export default function DemoRentalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white py-12 px-4">
+    <div className="min-h-screen bg-black text-white py-8 sm:py-12 px-4">
       <div className="max-w-7xl mx-auto">
-      
+
         {/* Hero Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
+        <div className="mb-8 sm:mb-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-2 sm:mb-4">
                 🎵 Rental Hub
               </h1>
-              <p className="text-lg text-[#A0A0A0] max-w-2xl">
+              <p className="text-sm sm:text-base lg:text-lg text-[#A0A0A0] max-w-2xl">
                 Louez du matériel professionnel entre communautés étudiantes.
                 Son, lumière, vidéo, logistique - tout le nécessaire pour vos événements.
               </p>
@@ -193,7 +193,7 @@ export default function DemoRentalPage() {
             {!isDemo && (
               <Link
                 href="/rental/create"
-                className="brutalist-button bg-purple-600 hover:bg-purple-700"
+                className="brutalist-button bg-purple-600 hover:bg-purple-700 w-full sm:w-auto whitespace-nowrap"
               >
                 ➕ Ajouter du Matériel
               </Link>
@@ -261,7 +261,7 @@ export default function DemoRentalPage() {
             </p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredEquipment.map((item) => (
               <Link
                 key={item.id}
