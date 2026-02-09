@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { getRentalItemById, getItemRentals } from '@/lib/utils/inventory';
 import { createRentalRequest } from '@/lib/utils/rentals';
 import { getOrgaStats } from '@/lib/utils/profiles';
+import { useToast } from '@/lib/hooks/useToast';
 import type { InventoryItem } from '@/types';
 
 type InventoryItemWithOwner = InventoryItem & {
@@ -25,6 +26,7 @@ export default function RentalDetailPage() {
   const router = useRouter();
   const equipmentId = params.id as string;
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
 
   const [equipment, setEquipment] = useState<InventoryItemWithOwner | null>(null);
   const [ownerStats, setOwnerStats] = useState<any>(null);
@@ -118,17 +120,17 @@ export default function RentalDetailPage() {
     e.preventDefault();
 
     if (!bookingData.startDate || !bookingData.endDate) {
-      alert('Veuillez sélectionner les dates');
+      toast.warning('Veuillez sélectionner les dates de début et de fin');
       return;
     }
 
     if (!bookingData.acceptTerms) {
-      alert('Veuillez accepter les conditions');
+      toast.warning('Veuillez accepter les conditions de location');
       return;
     }
 
     if (!currentUserId || !equipment) {
-      alert('Erreur: données manquantes');
+      toast.error('Erreur: données manquantes');
       return;
     }
 
@@ -138,14 +140,14 @@ export default function RentalDetailPage() {
     const startDate = new Date(bookingData.startDate);
 
     if (startDate < today) {
-      alert('❌ La date de début ne peut pas être dans le passé');
+      toast.error('La date de début ne peut pas être dans le passé');
       return;
     }
 
     // Check for date conflicts and quantity availability (CLIENT-SIDE VALIDATION)
     const hasConflict = checkDateConflict(bookingData.startDate, bookingData.endDate);
     if (hasConflict) {
-      alert('❌ Aucune quantité disponible pour ces dates.\n\nVeuillez choisir d\'autres dates ou vérifier le calendrier des disponibilités.');
+      toast.error('Aucune quantité disponible pour ces dates.\n\nVeuillez choisir d\'autres dates ou vérifier le calendrier des disponibilités.');
       return;
     }
 
@@ -171,13 +173,13 @@ export default function RentalDetailPage() {
       });
 
       if (!rental) {
-        alert('❌ Erreur lors de l\'envoi de la demande.\n\nVeuillez vérifier:\n- Que vous êtes bien connecté\n- Que les dates sont valides\n- Que l\'équipement est disponible\n\nConsultez la console (F12) pour plus de détails.');
+        toast.error('Erreur lors de l\'envoi de la demande.\n\nVeuillez vérifier:\n- Que vous êtes bien connecté\n- Que les dates sont valides\n- Que l\'équipement est disponible\n\nConsultez la console (F12) pour plus de détails.');
         setSubmitting(false);
         return;
       }
 
-      alert(
-        `✅ Demande de location envoyée!\n\nDurée: ${days} jour(s)\nTotal: ${totalPrice}€\n\nLe propriétaire recevra votre demande et vous contactera.`
+      toast.success(
+        `Demande de location envoyée!\n\nDurée: ${days} jour(s)\nTotal: ${totalPrice}€\n\nLe propriétaire recevra votre demande et vous contactera.`
       );
 
       // Reset form
@@ -186,7 +188,7 @@ export default function RentalDetailPage() {
       setSubmitting(false);
     } catch (err) {
       console.error('Error creating rental request:', err);
-      alert('❌ Erreur lors de l\'envoi de la demande');
+      toast.error('Erreur lors de l\'envoi de la demande');
       setSubmitting(false);
     }
   };
@@ -240,11 +242,13 @@ export default function RentalDetailPage() {
   const ownerReviewCount = ownerStats?.total_reviews || 0;
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <header className="border-b border-[#1A1A1A] px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/rental" className="text-sm text-[#A0A0A0] hover:text-white">
+    <>
+      <ToastContainer />
+      <div className="min-h-screen bg-black text-white">
+        {/* Header */}
+        <header className="border-b border-[#1A1A1A] px-6 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link href="/rental" className="text-sm text-[#A0A0A0] hover:text-white">
             ← Retour au catalogue
           </Link>
           <Link href="/demo" className="text-2xl font-bold">
@@ -526,6 +530,7 @@ export default function RentalDetailPage() {
           </div>
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }

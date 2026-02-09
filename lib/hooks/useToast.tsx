@@ -1,0 +1,56 @@
+'use client';
+
+import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import Toast, { ToastType } from '@/components/ui/Toast';
+import { AnimatePresence } from 'framer-motion';
+
+interface ToastItem {
+  id: string;
+  message: string;
+  type: ToastType;
+}
+
+export function useToast() {
+  const [toasts, setToasts] = useState<ToastItem[]>([]);
+
+  const showToast = useCallback((message: string, type: ToastType = 'info') => {
+    const id = Math.random().toString(36).substring(7);
+    setToasts((prev) => [...prev, { id, message, type }]);
+  }, []);
+
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
+  const ToastContainer = useCallback(() => {
+    if (typeof window === 'undefined') return null;
+
+    return createPortal(
+      <AnimatePresence>
+        <div className="fixed top-4 right-4 z-50 space-y-2">
+          {toasts.map((toast) => (
+            <Toast
+              key={toast.id}
+              message={toast.message}
+              type={toast.type}
+              onClose={() => removeToast(toast.id)}
+            />
+          ))}
+        </div>
+      </AnimatePresence>,
+      document.body
+    );
+  }, [toasts, removeToast]);
+
+  return {
+    showToast,
+    ToastContainer,
+    toast: {
+      success: (message: string) => showToast(message, 'success'),
+      error: (message: string) => showToast(message, 'error'),
+      warning: (message: string) => showToast(message, 'warning'),
+      info: (message: string) => showToast(message, 'info'),
+    },
+  };
+}
