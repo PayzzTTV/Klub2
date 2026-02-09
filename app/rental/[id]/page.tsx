@@ -406,9 +406,25 @@ export default function RentalDetailPage() {
                     end: bookingData.endDate || null,
                   }}
                   minDate={new Date()}
+                  onDateSelect={(date) => {
+                    const dateStr = date.toISOString().split('T')[0];
+                    if (!bookingData.startDate || (bookingData.startDate && bookingData.endDate)) {
+                      // Start new selection
+                      setBookingData({ ...bookingData, startDate: dateStr, endDate: '' });
+                    } else {
+                      // Set end date
+                      const start = new Date(bookingData.startDate);
+                      if (date >= start) {
+                        setBookingData({ ...bookingData, endDate: dateStr });
+                      } else {
+                        // If selected date is before start, swap
+                        setBookingData({ ...bookingData, startDate: dateStr, endDate: bookingData.startDate });
+                      }
+                    }
+                  }}
                 />
                 <p className="text-xs text-[#A0A0A0] mt-3">
-                  ℹ️ Les dates en rouge sont déjà réservées. Les dates en orange sont en attente de confirmation.
+                  💡 Cliquez sur une date pour commencer, puis sur une autre pour la fin. Les dates en rouge sont réservées.
                 </p>
               </div>
             )}
