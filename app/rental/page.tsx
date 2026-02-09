@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getRentalItems, InventoryItemWithOwner } from '@/lib/utils/inventory';
@@ -270,10 +271,13 @@ export default function DemoRentalPage() {
               >
                 {/* Image */}
                 <div className="relative aspect-video overflow-hidden bg-[#0A0A0A]">
-                  <img
+                  <Image
                     src={(isDemo ? (item as any).image : item.images?.[0]) || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800'}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                   />
                   {!item.available && (
                     <div className="absolute inset-0 bg-black/80 flex items-center justify-center">
