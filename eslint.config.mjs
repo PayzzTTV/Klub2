@@ -17,11 +17,25 @@ const eslintConfig = [
       '.next/**',
       'out/**',
       'build/**',
+      'coverage/**',
       'node_modules/**',
       'next-env.d.ts',
       '*.config.js',
       '*.config.mjs',
+      'seed-*.js',
+      'test-*.js',
     ],
+  },
+  {
+    rules: {
+      // Variables préfixées par _ sont autorisées (convention TypeScript)
+      '@typescript-eslint/no-unused-vars': ['error', {
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+    },
   },
 ];
 

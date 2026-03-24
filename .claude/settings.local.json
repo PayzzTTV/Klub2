@@ -30,7 +30,17 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(grep -n \"alert\\(\" /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/rental/create/page.tsx /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/rental/manage/page.tsx /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/projects/[id]/apply/page.tsx /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/projects/[id]/page.tsx /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/feedback/[projectId]/page.tsx /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/bde/projects/[id]/page.tsx /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/bde/projects/page.tsx /Users/alexisdelburg/KLUB/.claude/worktrees/suspicious-roentgen/app/\\\\\\(auth\\\\\\)/signup/page.tsx)",
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Bash(python3 -c \"import json,sys; data=json.load\\(sys.stdin\\); [print\\(p[''''id''''], p[''''name'''']\\) for p in data.get\\(''''projects'''', []\\)]\")",
+      "Bash(gh secret:*)",
+      "Bash(brew install:*)",
+      "Bash(python3 -c \"import nacl; print\\(''PyNaCl ok''\\)\")",
+      "Bash(python3 -c \"import base64; print\\(''base64 ok''\\)\")",
+      "Bash(env)",
+      "Bash(python3 setup-secrets.py:*)",
+      "Bash(grep -v \"^$\")",
+      "Bash(git reset:*)",
+      "Bash(git rm:*)"
     ],
     "additionalDirectories": [
       "c:\\projet\\Klub\\app\\demo\\projects\\[id]\\applications",
