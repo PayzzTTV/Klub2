@@ -121,6 +121,7 @@ export async function createRentalItem(
     daily_price: number;
     quantity: number;
     images?: string[];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     specifications?: Record<string, any>;
     location: string;
   }

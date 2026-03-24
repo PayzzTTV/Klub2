@@ -1,0 +1,6 @@
+# 2ème Voie DevOps : Feedback immédiat avant chaque commit
+echo "🔍 Vérification pre-commit en cours..."
+
+npx lint-staged
+
+echo "✅ Pre-commit validé !"
