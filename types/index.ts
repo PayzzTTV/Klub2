@@ -81,6 +81,7 @@ export interface InventoryItem {
   quantity: number;
   available: boolean;
   images: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   specifications: Record<string, any>;
   location?: string;
   condition: string;
@@ -187,6 +188,7 @@ export interface CreateInventoryForm {
   condition: string;
   min_rental_days: number;
   max_rental_days?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   specifications: Record<string, any>;
 }
 

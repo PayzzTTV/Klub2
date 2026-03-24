@@ -40,6 +40,7 @@ export default function LoginPage() {
           router.push('/projects');
         }
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la connexion');
     } finally {
@@ -113,7 +114,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center text-sm">
             <span className="text-[#A0A0A0]">Pas encore de compte ? </span>
             <Link href="/signup" className="text-[#7C3AED] hover:underline font-medium">
-              S'inscrire
+              S&apos;inscrire
             </Link>
           </div>
         </div>

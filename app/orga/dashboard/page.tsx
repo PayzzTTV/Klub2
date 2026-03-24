@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getOrgaStats, isTopProvider as checkTopProvider } from '@/lib/utils/profiles';
 import { getOrgaReviews, ReviewWithRelations } from '@/lib/utils/reviews';
+import { DashboardORGASkeleton } from '@/components/ui/Skeleton';
 
 export default function DemoOrgaDashboardPage() {
   const router = useRouter();
@@ -47,13 +48,7 @@ export default function DemoOrgaDashboardPage() {
     loadDashboard();
   }, [supabase, router]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#000000]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
-      </div>
-    );
-  }
+  if (loading) return <DashboardORGASkeleton />;
 
   return (
     <div className="min-h-screen bg-[#000000] py-8 sm:py-12 px-4">

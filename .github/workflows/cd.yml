@@ -1,0 +1,89 @@
+name: CD — Déploiement Continu
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environnement cible'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+
+# 1ère Voie DevOps : Flow continu vers la production
+jobs:
+  # ──────────────────────────────────────────
+  # Vérification pre-deploy (gate de qualité)
+  # ──────────────────────────────────────────
+  pre-deploy-check:
+    name: Vérification pre-deploy
+    runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check.outputs.deploy }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Vérification qualité rapide
+        id: check
+        run: |
+          npm run typecheck && echo "deploy=true" >> $GITHUB_OUTPUT || echo "deploy=false" >> $GITHUB_OUTPUT
+
+  # ──────────────────────────────────────────
+  # Déploiement sur Vercel
+  # ──────────────────────────────────────────
+  deploy:
+    name: Déploiement Vercel
+    runs-on: ubuntu-latest
+    needs: pre-deploy-check
+    if: needs.pre-deploy-check.outputs.should-deploy == 'true'
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+
+      - name: Résumé du déploiement
+        run: |
+          echo "## Déploiement réussi ✅" >> $GITHUB_STEP_SUMMARY
+          echo "URL: ${{ steps.deploy.outputs.preview-url }}" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "Branch: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+
+  # ──────────────────────────────────────────
+  # Notification d'échec (2ème Voie : Feedback)
+  # ──────────────────────────────────────────
+  notify-failure:
+    name: Notification d'échec
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-check, deploy]
+    if: failure()
+    steps:
+      - name: Résumé d'échec
+        run: |
+          echo "## Déploiement échoué ❌" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "Vérifier les logs CI pour corriger." >> $GITHUB_STEP_SUMMARY

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { UserRole } from '@/types';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
@@ -17,6 +18,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +50,7 @@ export default function SignupPage() {
         localStorage.setItem('dev_user', JSON.stringify(mockUser));
         localStorage.setItem('dev_authenticated', 'true');
 
-        alert(`✅ Compte créé avec succès ! (Mode Dev)\n\nBienvenue ${name} !`);
+        toast.success(`Bienvenue ${name} ! Compte créé avec succès.`);
 
         // Rediriger selon le rôle
         if (role === 'BDE') {
@@ -94,13 +96,14 @@ export default function SignupPage() {
         // Attendre que le trigger termine la création du profil
         await new Promise(resolve => setTimeout(resolve, 1500));
 
-        alert('✅ Compte créé avec succès !');
+        toast.success('Compte créé avec succès !');
         if (role === 'BDE') {
           router.push('/bde/dashboard');
         } else {
           router.push('/projects');
         }
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.message || 'Erreur lors de l\'inscription');
@@ -171,7 +174,7 @@ export default function SignupPage() {
                   <div className="text-2xl mb-2">🎪</div>
                   <div className="font-semibold">ORGA</div>
                   <div className="text-xs text-[#A0A0A0] mt-1">
-                    Organisateur d'événements
+                    Organisateur d&apos;événements
                   </div>
                 </button>
               </div>
@@ -196,7 +199,7 @@ export default function SignupPage() {
 
               <div>
                 <label htmlFor="organization" className="block text-sm font-medium mb-2">
-                  Nom de l'organisation
+                  Nom de l&apos;organisation
                 </label>
                 <input
                   id="organization"
@@ -274,6 +277,7 @@ export default function SignupPage() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

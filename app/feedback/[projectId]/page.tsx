@@ -7,19 +7,23 @@ import StarRating from '@/components/ui/StarRating';
 import { createClient } from '@/lib/supabase/client';
 import { getProjectById } from '@/lib/utils/projects';
 import { createReview, canReview } from '@/lib/utils/reviews';
-import type { Project, ProjectApplication } from '@/types';
+import type { Project } from '@/types';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function DemoFeedbackPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.projectId as string;
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
 
   const [project, setProject] = useState<Project | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [selectedOrga, setSelectedOrga] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [canSubmitReview, setCanSubmitReview] = useState(false);
 
   const [ratings, setRatings] = useState({
@@ -116,17 +120,17 @@ export default function DemoFeedbackPage() {
     // Validation
     if (ratings.punctuality === 0 || ratings.quality === 0 ||
         ratings.communication === 0 || ratings.value === 0 || ratings.global === 0) {
-      alert('Veuillez noter tous les critères');
+      toast.warning('Veuillez noter tous les critères');
       return;
     }
 
     if (comment.trim().length < 10) {
-      alert('Veuillez ajouter un commentaire (minimum 10 caractères)');
+      toast.warning('Veuillez ajouter un commentaire (minimum 10 caractères)');
       return;
     }
 
     if (!currentUserId || !selectedOrga || !project) {
-      alert('Erreur: données manquantes');
+      toast.error('Erreur: données manquantes');
       return;
     }
 
@@ -147,7 +151,7 @@ export default function DemoFeedbackPage() {
       });
 
       if (!review) {
-        alert('❌ Erreur lors de l\'envoi du feedback');
+        toast.error('Erreur lors de l\'envoi du feedback');
         setSubmitting(false);
         return;
       }
@@ -162,11 +166,11 @@ export default function DemoFeedbackPage() {
         console.error('Error updating feedback_given flag:', updateError);
       }
 
-      alert('✅ Feedback envoyé avec succès!\n\nVous pouvez maintenant créer de nouveaux projets.');
+      toast.success('Feedback envoyé ! Vous pouvez maintenant créer de nouveaux projets.');
       router.push('/bde/dashboard');
     } catch (err) {
       console.error('Error submitting feedback:', err);
-      alert('❌ Erreur lors de l\'envoi du feedback');
+      toast.error('Erreur lors de l\'envoi du feedback');
       setSubmitting(false);
     }
   };
@@ -422,6 +426,7 @@ export default function DemoFeedbackPage() {
           )}
         </form>
       </main>
+      <ToastContainer />
     </div>
   );
 }

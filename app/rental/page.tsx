@@ -7,118 +7,6 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getRentalItems, InventoryItemWithOwner } from '@/lib/utils/inventory';
 
-// Mock equipment data (fallback for demo mode)
-const mockEquipment = [
-  {
-    id: '1',
-    title: 'Système Son Professionnel 15kW',
-    category: 'Son',
-    owner: 'SoundTech Events',
-    ownerId: 'orga-1',
-    dailyPrice: 350,
-    quantity: 2,
-    available: true,
-    location: 'Paris',
-    image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800',
-    description: 'Système de sonorisation professionnel avec enceintes, amplis et table de mixage',
-    specifications: {
-      puissance: '15kW',
-      capacite: '500 personnes',
-      configuration: '2x Sub + 4x Tops',
-    },
-  },
-  {
-    id: '2',
-    title: 'Pack Lumière LED RGB - 12 projecteurs',
-    category: 'Lumière',
-    owner: 'LightShow Pro',
-    ownerId: 'orga-2',
-    dailyPrice: 280,
-    quantity: 1,
-    available: true,
-    location: 'Lyon',
-    image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800',
-    description: '12 projecteurs LED RGB avec console DMX et câblage complet',
-    specifications: {
-      type: 'LED RGB',
-      nombre: '12 projecteurs',
-      controle: 'Console DMX',
-    },
-  },
-  {
-    id: '3',
-    title: 'Caméra 4K + Stabilisateur',
-    category: 'Image',
-    owner: 'VideoMakers Studio',
-    ownerId: 'orga-3',
-    dailyPrice: 200,
-    quantity: 1,
-    available: true,
-    location: 'Paris',
-    image: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800',
-    description: 'Caméra 4K professionnelle avec gimbal stabilisateur et accessoires',
-    specifications: {
-      resolution: '4K 60fps',
-      stabilisateur: 'Gimbal 3 axes',
-      autonomie: '4h',
-    },
-  },
-  {
-    id: '4',
-    title: 'Barnums 3x3m - Lot de 4',
-    category: 'Logistique',
-    owner: 'EventPro',
-    ownerId: 'orga-4',
-    dailyPrice: 120,
-    quantity: 4,
-    available: true,
-    location: 'Marseille',
-    image: 'https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=800',
-    description: '4 barnums pliants 3x3m avec bâches, idéal pour stands extérieurs',
-    specifications: {
-      dimensions: '3x3m',
-      couleur: 'Blanc',
-      poids: '25kg/unité',
-    },
-  },
-  {
-    id: '5',
-    title: 'Console DJ Pioneer XDJ-RX3',
-    category: 'Son',
-    owner: 'DJ Collective',
-    ownerId: 'orga-5',
-    dailyPrice: 180,
-    quantity: 1,
-    available: true,
-    location: 'Paris',
-    image: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=800',
-    description: 'Console DJ all-in-one professionnelle avec écran tactile',
-    specifications: {
-      modele: 'Pioneer XDJ-RX3',
-      canaux: '4 decks',
-      connectivite: 'USB, Rekordbox',
-    },
-  },
-  {
-    id: '6',
-    title: 'Écran LED Géant 3x2m',
-    category: 'Image',
-    owner: 'ScreenTech',
-    ownerId: 'orga-6',
-    dailyPrice: 450,
-    quantity: 1,
-    available: false,
-    location: 'Lyon',
-    image: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=800',
-    description: 'Écran LED géant modulaire pour événements outdoor/indoor',
-    specifications: {
-      dimensions: '3x2m',
-      resolution: 'Full HD',
-      luminosite: '5000 nits',
-    },
-  },
-];
-
 const categories = ['Tous', 'Son', 'Image', 'Lumière', 'Logistique'];
 
 export default function DemoRentalPage() {
@@ -130,6 +18,8 @@ export default function DemoRentalPage() {
   const [equipment, setEquipment] = useState<InventoryItemWithOwner[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
     async function loadEquipment() {
@@ -144,6 +34,7 @@ export default function DemoRentalPage() {
 
       setIsDemo(false);
       const items = await getRentalItems(supabase, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         category: selectedCategory === 'Tous' ? undefined : selectedCategory as any,
         availableOnly: true,
       });
@@ -166,6 +57,12 @@ export default function DemoRentalPage() {
 
     return matchesSearch;
   });
+
+  const totalPages = Math.ceil(filteredEquipment.length / ITEMS_PER_PAGE);
+  const paginatedEquipment = filteredEquipment.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   if (loading) {
     return (
@@ -248,7 +145,7 @@ export default function DemoRentalPage() {
         <div className="mb-6">
           <p className="text-sm text-[#A0A0A0]">
             {filteredEquipment.length} résultat{filteredEquipment.length > 1 ? 's' : ''} trouvé
-            {filteredEquipment.length > 1 ? 's' : ''}
+            {filteredEquipment.length > 1 ? 's' : ''}{totalPages > 1 && ` — page ${currentPage}/${totalPages}`}
           </p>
         </div>
 
@@ -263,7 +160,7 @@ export default function DemoRentalPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {filteredEquipment.map((item) => (
+            {paginatedEquipment.map((item) => (
               <Link
                 key={item.id}
                 href={`/rental/${item.id}`}
@@ -272,6 +169,7 @@ export default function DemoRentalPage() {
                 {/* Image */}
                 <div className="relative aspect-video overflow-hidden bg-[#0A0A0A]">
                   <Image
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     src={(isDemo ? (item as any).image : item.images?.[0]) || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800'}
                     alt={item.title}
                     fill
@@ -306,6 +204,7 @@ export default function DemoRentalPage() {
                   <div className="flex items-center justify-between pt-4 border-t border-[#1A1A1A]">
                     <div>
                       <div className="text-2xl font-bold text-[#00FF66]">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {item.daily_price || (item as any).dailyPrice}€
                       </div>
                       <div className="text-xs text-[#A0A0A0]">par jour</div>
@@ -313,6 +212,7 @@ export default function DemoRentalPage() {
                     <div className="text-right">
                       <div className="text-xs text-[#A0A0A0] mb-1">Par</div>
                       <div className="text-sm font-semibold">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {item.owner?.organization_name || item.owner?.name || (item as any).owner}
                       </div>
                     </div>
@@ -326,6 +226,39 @@ export default function DemoRentalPage() {
                 </div>
               </Link>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-2 mt-8">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border border-[#1A1A1A] text-sm disabled:opacity-30 hover:border-[#7C3AED] transition-colors"
+            >
+              ← Précédent
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 border text-sm transition-colors ${
+                  page === currentPage
+                    ? 'border-[#7C3AED] bg-[#7C3AED]/20 text-white'
+                    : 'border-[#1A1A1A] hover:border-[#7C3AED]'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border border-[#1A1A1A] text-sm disabled:opacity-30 hover:border-[#7C3AED] transition-colors"
+            >
+              Suivant →
+            </button>
           </div>
         )}
       </div>
