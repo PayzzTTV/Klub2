@@ -5,21 +5,25 @@ import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { getProjectById, getProjectApplications, ProjectApplicationWithProfile, ProjectWithProfile } from '@/lib/utils/projects';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function DemoProjectDetailPage() {
   const params = useParams();
   const projectId = params.id as string;
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
 
   const [project, setProject] = useState<ProjectWithProfile | null>(null);
   const [applications, setApplications] = useState<ProjectApplicationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isDemo, setIsDemo] = useState(true);
   const [userRole, setUserRole] = useState<'BDE' | 'ORGA' | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Mock data - en vrai on ferait un fetch avec l'ID
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockProjects: Record<string, any> = {
     '1': {
       id: '1',
@@ -166,10 +170,10 @@ export default function DemoProjectDetailPage() {
       const updatedApplications = await getProjectApplications(supabase, projectId);
       setApplications(updatedApplications);
 
-      alert('✅ Candidature acceptée !');
+      toast.success('Candidature acceptée !');
     } catch (err) {
       console.error('Error accepting application:', err);
-      alert('❌ Erreur lors de l\'acceptation');
+      toast.error('Erreur lors de l\'acceptation');
     }
   };
 
@@ -188,10 +192,10 @@ export default function DemoProjectDetailPage() {
       const updatedApplications = await getProjectApplications(supabase, projectId);
       setApplications(updatedApplications);
 
-      alert('❌ Candidature refusée');
+      toast.info('Candidature refusée');
     } catch (err) {
       console.error('Error rejecting application:', err);
-      alert('❌ Erreur lors du refus');
+      toast.error('Erreur lors du refus');
     }
   };
 
@@ -422,6 +426,7 @@ export default function DemoProjectDetailPage() {
           </div>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

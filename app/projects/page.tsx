@@ -11,7 +11,6 @@ export default function DemoProjectsPage() {
   const supabase = createClient();
   const [projects, setProjects] = useState<ProjectWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(true);
 
   const [filters, setFilters] = useState({
     type: 'all',
@@ -22,90 +21,8 @@ export default function DemoProjectsPage() {
   });
 
   const [sortBy, setSortBy] = useState<'date' | 'budget' | 'capacity'>('date');
-
-  // Mock data for demo mode
-  const mockProjects = [
-    {
-      id: '1',
-      title: 'Gala de fin d\'année 2026',
-      type: 'Gala' as const,
-      budget: 15000,
-      capacity: 500,
-      location: 'Paris',
-      start_date: '2026-06-15',
-      end_date: '2026-06-15',
-      description: 'Grand gala de fin d\'année avec 500 personnes. Besoin de prestataires son, lumière et DJ.',
-      bde_id: 'mock-bde-1',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE ESSEC',
-        organization_name: 'ESSEC Business School',
-      },
-    },
-    {
-      id: '2',
-      title: 'Festival Campus Summer',
-      type: 'Festival' as const,
-      budget: 25000,
-      capacity: 1000,
-      location: 'Lyon',
-      start_date: '2026-05-20',
-      end_date: '2026-05-22',
-      description: 'Festival outdoor sur 2 jours avec plusieurs scènes.',
-      bde_id: 'mock-bde-2',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE EM Lyon',
-        organization_name: 'EM Lyon Business School',
-      },
-    },
-    {
-      id: '3',
-      title: 'Soirée d\'intégration',
-      type: 'Soirée' as const,
-      budget: 8000,
-      capacity: 300,
-      location: 'Toulouse',
-      start_date: '2026-09-10',
-      end_date: '2026-09-10',
-      description: 'Soirée de rentrée pour accueillir les nouveaux étudiants.',
-      bde_id: 'mock-bde-3',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE Toulouse BS',
-        organization_name: 'Toulouse Business School',
-      },
-    },
-    {
-      id: '4',
-      title: 'Conférence Tech & Innovation',
-      type: 'Conférence' as const,
-      budget: 12000,
-      capacity: 200,
-      location: 'Paris',
-      start_date: '2026-04-05',
-      end_date: '2026-04-05',
-      description: 'Conférence avec speakers renommés. Besoin de matériel audiovisuel professionnel.',
-      bde_id: 'mock-bde-4',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE Télécom Paris',
-        organization_name: 'Télécom Paris',
-      },
-    },
-  ];
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 6;
 
   const projectTypes = ['all', 'Gala', 'Soirée', 'Festival', 'Conférence', 'Autre'];
 
@@ -120,7 +37,6 @@ export default function DemoProjectsPage() {
         return;
       }
 
-      setIsDemo(false);
       const supabaseProjects = await getPublishedProjects(supabase, {
         type: filters.type,
         search: '' // Search is handled client-side
@@ -158,6 +74,12 @@ export default function DemoProjectsPage() {
       }
       return 0;
     });
+
+  const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
+  const paginatedProjects = filteredProjects.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="min-h-screen bg-[#000000] py-8 sm:py-12 px-4">
@@ -257,7 +179,7 @@ export default function DemoProjectsPage() {
           {/* Results header with sort */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div className="text-sm text-[#A0A0A0]">
-              {filteredProjects.length} projet(s) trouvé(s)
+              {filteredProjects.length} projet(s) trouvé(s){totalPages > 1 && ` — page ${currentPage}/${totalPages}`}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-sm text-[#A0A0A0]">Trier par:</span>
@@ -279,7 +201,7 @@ export default function DemoProjectsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              {filteredProjects.map((project) => (
+              {paginatedProjects.map((project) => (
                 <div
                   key={project.id}
                   className="brutalist-card p-4 sm:p-6 hover:border-[#7C3AED] transition-colors"
@@ -341,6 +263,39 @@ export default function DemoProjectsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-8">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 border border-[#1A1A1A] text-sm disabled:opacity-30 hover:border-[#7C3AED] transition-colors"
+              >
+                ← Précédent
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`px-4 py-2 border text-sm transition-colors ${
+                    page === currentPage
+                      ? 'border-[#7C3AED] bg-[#7C3AED]/20 text-white'
+                      : 'border-[#1A1A1A] hover:border-[#7C3AED]'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 border border-[#1A1A1A] text-sm disabled:opacity-30 hover:border-[#7C3AED] transition-colors"
+              >
+                Suivant →
+              </button>
             </div>
           )}
         </>
