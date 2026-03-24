@@ -14,13 +14,13 @@ export default function DemoBDEDashboard() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const [_profile, setProfile] = useState<Profile | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Use the pending feedback hook
-  const { pendingProjects, loading: feedbackLoading } = usePendingFeedback(supabase, userId);
+  const { pendingProjects, loading: _feedbackLoading } = usePendingFeedback(supabase, userId);
 
   useEffect(() => {
     async function loadDashboard() {
