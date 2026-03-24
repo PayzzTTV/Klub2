@@ -8,6 +8,7 @@ import { getBDEProjects, updateAllProjectStatuses } from '@/lib/utils/projects';
 import { getProfile } from '@/lib/utils/profiles';
 import { Profile, Project } from '@/types';
 import { usePendingFeedback } from '@/lib/hooks/usePendingFeedback';
+import { DashboardBDESkeleton } from '@/components/ui/Skeleton';
 import FeedbackBanner from '@/components/feedback/FeedbackBanner';
 
 export default function DemoBDEDashboard() {
@@ -55,13 +56,7 @@ export default function DemoBDEDashboard() {
   const completedProjects = projects.filter((p) => p.status === 'completed').length;
   const activeProjects = projects.filter((p) => p.status === 'in_progress').length;
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#000000]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
-      </div>
-    );
-  }
+  if (loading) return <DashboardBDESkeleton />;
 
   const hasPendingFeedback = pendingProjects.length > 0;
 
