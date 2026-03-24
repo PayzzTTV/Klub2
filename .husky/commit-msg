@@ -1,0 +1,35 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Validation du format Conventional Commits
+# Format: type(scope): message
+# Types: feat|fix|docs|style|refactor|test|chore|ci|perf
+
+commit_msg=$(cat "$1")
+pattern="^(feat|fix|docs|style|refactor|test|chore|ci|perf|build|revert)(\(.+\))?: .{1,72}$"
+
+if ! echo "$commit_msg" | grep -qE "$pattern"; then
+  echo ""
+  echo "❌ Format de commit invalide !"
+  echo ""
+  echo "Format attendu : type(scope): message"
+  echo ""
+  echo "Types valides :"
+  echo "  feat     → Nouvelle fonctionnalité"
+  echo "  fix      → Correction de bug"
+  echo "  docs     → Documentation uniquement"
+  echo "  refactor → Refactoring (ni feat, ni fix)"
+  echo "  test     → Ajout/modification de tests"
+  echo "  chore    → Maintenance (build, deps...)"
+  echo "  ci       → Changements CI/CD"
+  echo "  perf     → Amélioration performance"
+  echo ""
+  echo "Exemples valides :"
+  echo "  feat(auth): ajouter la connexion Google"
+  echo "  fix(rental): corriger le calcul de prix"
+  echo "  ci: ajouter pipeline GitHub Actions"
+  echo ""
+  exit 1
+fi
+
+echo "✅ Format de commit valide"

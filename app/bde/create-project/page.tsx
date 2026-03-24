@@ -5,10 +5,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { createProject } from '@/lib/utils/projects';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function DemoCreateProjectPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isDemo, setIsDemo] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -51,6 +53,7 @@ export default function DemoCreateProjectPage() {
 
       const projectData = {
         title: formData.title,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         type: formData.type as any,
         budget: parseFloat(formData.budget),
         capacity: parseInt(formData.capacity),
@@ -66,15 +69,15 @@ export default function DemoCreateProjectPage() {
       const newProject = await createProject(supabase, currentUserId, projectData);
 
       if (newProject) {
-        alert('✅ Projet créé avec succès !');
+        toast.success('Projet créé avec succès !');
         router.push(`/projects/${newProject.id}`);
       } else {
-        alert('❌ Erreur lors de la création du projet. Vérifiez vos permissions.');
+        toast.error('Erreur lors de la création du projet. Vérifiez vos permissions.');
         setSubmitting(false);
       }
     } else {
-      // Demo mode: Just show alert
-      alert('Mode Démo : Le projet a été créé avec succès ! (Données non enregistrées)');
+      // Demo mode: Just show toast
+      toast.info('Mode Démo : Le projet a été créé avec succès !');
       setSubmitting(false);
       router.push('/bde/dashboard');
     }
@@ -215,6 +218,7 @@ export default function DemoCreateProjectPage() {
           </div>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 }

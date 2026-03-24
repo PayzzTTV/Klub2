@@ -10,19 +10,25 @@ import {
   updateRentalStatus,
 } from '@/lib/utils/inventory';
 import { getRentalItems } from '@/lib/utils/inventory';
+import { useToast } from '@/lib/hooks/useToast';
 
 type RentalStatus = 'pending' | 'approved' | 'ongoing' | 'completed' | 'cancelled';
 
 export default function ManageRentalsPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'incoming' | 'outgoing' | 'my-items'>('incoming');
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [incomingRequests, setIncomingRequests] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [outgoingRequests, setOutgoingRequests] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [myItems, setMyItems] = useState<any[]>([]);
 
   const [filterStatus, setFilterStatus] = useState<RentalStatus | 'all'>('all');
@@ -70,31 +76,31 @@ export default function ManageRentalsPage() {
   const handleApprove = async (rentalId: string) => {
     const success = await updateRentalStatus(supabase, rentalId, 'approved');
     if (success) {
-      alert('✅ Demande approuvée !');
+      toast.success('Demande approuvée !');
       // Reload data
       window.location.reload();
     } else {
-      alert('❌ Erreur lors de l\'approbation');
+      toast.error('Erreur lors de l\'approbation');
     }
   };
 
   const handleReject = async (rentalId: string) => {
     const success = await updateRentalStatus(supabase, rentalId, 'cancelled');
     if (success) {
-      alert('❌ Demande refusée');
+      toast.info('Demande refusée');
       window.location.reload();
     } else {
-      alert('❌ Erreur lors du refus');
+      toast.error('Erreur lors du refus');
     }
   };
 
   const handleComplete = async (rentalId: string) => {
     const success = await updateRentalStatus(supabase, rentalId, 'completed');
     if (success) {
-      alert('✅ Location marquée comme terminée');
+      toast.success('Location marquée comme terminée');
       window.location.reload();
     } else {
-      alert('❌ Erreur');
+      toast.error('Une erreur est survenue');
     }
   };
 
@@ -222,6 +228,7 @@ export default function ManageRentalsPage() {
             {['all', 'pending', 'approved', 'ongoing', 'completed', 'cancelled'].map((status) => (
               <button
                 key={status}
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 onClick={() => setFilterStatus(status as any)}
                 className={`px-4 py-2 rounded border whitespace-nowrap transition-all ${
                   filterStatus === status
@@ -243,7 +250,7 @@ export default function ManageRentalsPage() {
                 <div className="text-6xl mb-4">📦</div>
                 <h3 className="text-xl font-bold mb-2">Aucun équipement</h3>
                 <p className="text-gray-400">
-                  Vous n'avez pas encore ajouté d'équipement à louer
+                  Vous n&apos;avez pas encore ajouté d&apos;équipement à louer
                 </p>
                 <Link href="/rental/create" className="brutalist-button mt-6 inline-block bg-purple-600 hover:bg-purple-700">
                   ➕ Ajouter du Matériel
@@ -259,6 +266,7 @@ export default function ManageRentalsPage() {
                   >
                     {/* Image */}
                     <div className="relative aspect-video overflow-hidden bg-gray-900">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={item.images?.[0] || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800'}
                         alt={item.title}
@@ -335,6 +343,7 @@ export default function ManageRentalsPage() {
                 <div className="flex flex-col md:flex-row gap-6">
                   {/* Item Image */}
                   <div className="w-full md:w-48 h-32 flex-shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={request.item.images?.[0] || 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800'}
                       alt={request.item.title}
@@ -467,6 +476,7 @@ export default function ManageRentalsPage() {
           </div>
         ))}
       </div>
+      <ToastContainer />
     </div>
   );
 }

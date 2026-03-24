@@ -6,16 +6,19 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { getProjectById, getProjectApplications, updateProjectStatusByDate, ProjectApplicationWithProfile } from '@/lib/utils/projects';
 import type { Project } from '@/types';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function BDEProjectDetailPage() {
   const params = useParams();
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
   const [applications, setApplications] = useState<ProjectApplicationWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState('');
 
@@ -90,10 +93,10 @@ export default function BDEProjectDetailPage() {
       const updatedApplications = await getProjectApplications(supabase, projectId);
       setApplications(updatedApplications);
 
-      alert('✅ Candidature acceptée !');
+      toast.success('Candidature acceptée !');
     } catch (err) {
       console.error('Error accepting application:', err);
-      alert('❌ Erreur lors de l\'acceptation');
+      toast.error('Erreur lors de l\'acceptation');
     }
   };
 
@@ -110,10 +113,10 @@ export default function BDEProjectDetailPage() {
       const updatedApplications = await getProjectApplications(supabase, projectId);
       setApplications(updatedApplications);
 
-      alert('❌ Candidature refusée');
+      toast.info('Candidature refusée');
     } catch (err) {
       console.error('Error rejecting application:', err);
-      alert('❌ Erreur lors du refus');
+      toast.error('Erreur lors du refus');
     }
   };
 
@@ -132,10 +135,10 @@ export default function BDEProjectDetailPage() {
       const updatedProject = await getProjectById(supabase, projectId);
       setProject(updatedProject);
 
-      alert('✅ Projet démarré !');
+      toast.success('Projet démarré !');
     } catch (err) {
       console.error('Error starting project:', err);
-      alert('❌ Erreur lors du démarrage');
+      toast.error('Erreur lors du démarrage');
     }
   };
 
@@ -154,10 +157,10 @@ export default function BDEProjectDetailPage() {
       const updatedProject = await getProjectById(supabase, projectId);
       setProject(updatedProject);
 
-      alert('✅ Projet terminé !');
+      toast.success('Projet terminé !');
     } catch (err) {
       console.error('Error completing project:', err);
-      alert('❌ Erreur lors de la finalisation');
+      toast.error('Erreur lors de la finalisation');
     }
   };
 
@@ -241,7 +244,7 @@ export default function BDEProjectDetailPage() {
                 🚀 Démarrer le projet
               </button>
               <p className="text-xs text-[#A0A0A0] mt-2">
-                Le projet passera en mode "En cours"
+                Le projet passera en mode &quot;En cours&quot;
               </p>
             </div>
           )}
@@ -256,7 +259,7 @@ export default function BDEProjectDetailPage() {
                 ✅ Terminer le projet
               </button>
               <p className="text-xs text-[#A0A0A0] mt-2">
-                Le projet passera en mode "Terminé"
+                Le projet passera en mode &quot;Terminé&quot;
               </p>
             </div>
           )}
@@ -416,6 +419,7 @@ export default function BDEProjectDetailPage() {
           </div>
         )}
       </main>
+      <ToastContainer />
     </div>
   );
 }
