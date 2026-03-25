@@ -25,6 +25,7 @@ export default function DemoBDEDashboard() {
   useEffect(() => {
     async function loadDashboard() {
       setLoading(true);
+
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
@@ -33,11 +34,8 @@ export default function DemoBDEDashboard() {
       }
 
       setUserId(user.id);
-
-      // Update project statuses based on dates
       await updateAllProjectStatuses(supabase);
 
-      // Load data in parallel
       const [profileData, projectsData] = await Promise.all([
         getProfile(supabase, user.id),
         getBDEProjects(supabase, user.id),
@@ -58,140 +56,163 @@ export default function DemoBDEDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#000000]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
+        <div className="k-spinner" />
       </div>
     );
   }
 
   const hasPendingFeedback = pendingProjects.length > 0;
 
+  function statusBadge(status: string) {
+    if (status === 'published') return <span className="k-badge k-badge-violet">Publie</span>;
+    if (status === 'in_progress') return <span className="k-badge k-badge-green">En cours</span>;
+    if (status === 'completed') return <span className="k-badge k-badge-white">Termine</span>;
+    if (status === 'cancelled') return <span className="k-badge k-badge-red">Annule</span>;
+    return <span className="k-badge">{status}</span>;
+  }
+
+  const today = new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+
   return (
-    <div className="min-h-screen bg-[#000000] py-8 sm:py-12 px-4">
-      <main className="max-w-7xl mx-auto">
-        {/* Bandeau de feedback obligatoire */}
+    <div className="k-page">
+      <div className="k-page-inner">
         <FeedbackBanner projects={pendingProjects} />
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-          <div className="brutalist-card p-6">
-            <div className="text-3xl font-bold text-[#7C3AED] mb-2">{totalProjects}</div>
-            <div className="text-sm text-[#A0A0A0]">Projets créés</div>
-          </div>
-          <div className="brutalist-card p-6">
-            <div className="text-3xl font-bold text-[#00FF66] mb-2">{activeProjects}</div>
-            <div className="text-sm text-[#A0A0A0]">En cours</div>
-          </div>
-          <div className="brutalist-card p-6">
-            <div className="text-3xl font-bold text-white mb-2">{completedProjects}</div>
-            <div className="text-sm text-[#A0A0A0]">Terminés</div>
+
+        {/* Greeting */}
+        <div style={{ marginBottom: '40px', paddingBottom: '40px', borderBottom: '1px solid #1A1A1A' }}>
+          <p className="k-section-label mb-3">{today}</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '16px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#F0F0F0', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+              {profile?.organization_name ?? profile?.name ?? 'BDE'}
+            </h1>
+            <span className="k-badge k-badge-violet">BDE</span>
           </div>
         </div>
 
-        {/* Actions rapides */}
-        <div className="mb-8">
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Actions rapides</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: '#1A1A1A', border: '1px solid #1A1A1A', marginBottom: '40px' }}>
+          {[
+            { label: 'Projets créés', value: totalProjects, color: '#7C3AED' },
+            { label: 'En cours', value: activeProjects, color: '#00FF66' },
+            { label: 'Terminés', value: completedProjects, color: '#F0F0F0' },
+          ].map((stat) => (
+            <div key={stat.label} style={{ background: '#000', padding: '24px 28px' }}>
+              <p className="k-section-label mb-4" style={{ whiteSpace: 'nowrap' }}>{stat.label}</p>
+              <p style={{ fontSize: '40px', fontWeight: 700, color: stat.color, lineHeight: 1, letterSpacing: '-0.03em', fontFamily: 'Inter, system-ui, sans-serif', fontVariantNumeric: 'tabular-nums' }}>
+                {stat.value}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Quick actions */}
+        <div style={{ marginBottom: '40px' }}>
+          <p className="k-section-label mb-4">Actions rapides</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: '#1A1A1A', border: '1px solid #1A1A1A' }}>
             {hasPendingFeedback ? (
-              <div className="brutalist-card p-6 opacity-50 cursor-not-allowed transition-all">
-                <div className="text-3xl mb-3">🎯</div>
-                <h3 className="text-lg font-semibold mb-2">Créer un projet</h3>
-                <p className="text-sm text-[#A0A0A0]">
-                  Postez un nouvel événement et trouvez des prestataires
-                </p>
-                <div className="mt-3 text-xs text-[#FF0055]">
-                  ⚠️ Feedback obligatoire en attente
-                </div>
+              <div style={{ background: '#000', padding: '24px', opacity: 0.35, cursor: 'not-allowed' }}>
+                <p className="k-section-label mb-4">01</p>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Créer un projet</h3>
+                <p style={{ fontSize: '12px', color: '#555', marginBottom: '12px' }}>Postez un événement et trouvez des prestataires</p>
+                <p style={{ fontSize: '10px', color: '#FF0055', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Feedback requis</p>
               </div>
             ) : (
               <Link
                 href="/bde/create-project"
-                className="brutalist-card p-6 hover:border-[#7C3AED] cursor-pointer transition-all"
+                style={{ background: '#000', padding: '24px', textDecoration: 'none', display: 'block', transition: 'background 0.15s' }}
+                onMouseEnter={e => (e.currentTarget.style.background = '#0A0A0A')}
+                onMouseLeave={e => (e.currentTarget.style.background = '#000')}
               >
-                <div className="text-3xl mb-3">🎯</div>
-                <h3 className="text-lg font-semibold mb-2">Créer un projet</h3>
-                <p className="text-sm text-[#A0A0A0]">
-                  Postez un nouvel événement et trouvez des prestataires
-                </p>
+                <p className="k-section-label mb-4">01</p>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Créer un projet</h3>
+                <p style={{ fontSize: '12px', color: '#555' }}>Postez un événement et trouvez des prestataires</p>
               </Link>
             )}
 
-            <Link href="/rental/manage" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
-              <div className="text-3xl mb-3">📋</div>
-              <h3 className="text-lg font-semibold mb-2">Gérer les locations</h3>
-              <p className="text-sm text-[#A0A0A0]">
-                Gérez les demandes de location de votre matériel
-              </p>
+            <Link
+              href="/rental/manage"
+              style={{ background: '#000', padding: '24px', textDecoration: 'none', display: 'block', transition: 'background 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#0A0A0A')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#000')}
+            >
+              <p className="k-section-label mb-4">02</p>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Gérer les locations</h3>
+              <p style={{ fontSize: '12px', color: '#555' }}>Approuvez ou refusez les demandes de location</p>
             </Link>
 
-            <Link href="/rental" className="brutalist-card p-6 hover:border-[#7C3AED] transition-all">
-              <div className="text-3xl mb-3">🎵</div>
-              <h3 className="text-lg font-semibold mb-2">Louer du matériel</h3>
-              <p className="text-sm text-[#A0A0A0]">
-                Parcourez le catalogue de matériel disponible
-              </p>
+            <Link
+              href="/rental"
+              style={{ background: '#000', padding: '24px', textDecoration: 'none', display: 'block', transition: 'background 0.15s' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#0A0A0A')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#000')}
+            >
+              <p className="k-section-label mb-4">03</p>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Louer du matériel</h3>
+              <p style={{ fontSize: '12px', color: '#555' }}>Parcourez le catalogue disponible</p>
             </Link>
           </div>
         </div>
 
-        {/* Liste des projets récents */}
+        {/* Projects list */}
         <div>
-          <h2 className="text-lg sm:text-xl font-bold mb-4">Projets récents</h2>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <p className="k-section-label">Projets récents</p>
+            {projects.length > 0 && (
+              <Link href="/bde/projects" style={{ fontSize: '10px', color: '#7C3AED', letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none', fontWeight: 600 }}>
+                Voir tout →
+              </Link>
+            )}
+          </div>
+
           {projects.length === 0 ? (
-            <div className="brutalist-card p-8 text-center">
-              <div className="text-4xl mb-4">📋</div>
-              <h3 className="text-lg font-semibold mb-2">Aucun projet pour le moment</h3>
-              <p className="text-sm text-[#A0A0A0] mb-4">
-                Créez votre premier projet pour commencer à collaborer avec des prestataires
+            <div style={{ border: '1px solid #1A1A1A', padding: '48px 24px', textAlign: 'center' }}>
+              <p style={{ fontSize: '13px', color: '#333', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>Aucun projet</p>
+              <p style={{ fontSize: '13px', color: '#555', marginBottom: '24px' }}>
+                Créez votre premier projet pour collaborer avec des prestataires
               </p>
               {!hasPendingFeedback && (
-                <Link
-                  href="/bde/create-project"
-                  className="brutalist-button-primary inline-block px-6 py-2"
-                >
+                <Link href="/bde/create-project" className="k-btn">
                   Créer un projet
                 </Link>
               )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {projects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/bde/projects/${project.id}`}
-                className="brutalist-card p-4 sm:p-6 hover:border-[#7C3AED] transition-all cursor-pointer block"
-              >
-                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-base sm:text-lg mb-2">{project.title}</h3>
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[#A0A0A0]">
-                      <span>{project.type}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span>{project.location}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span>{new Date(project.start_date).toLocaleDateString('fr-FR')}</span>
+            <div style={{ border: '1px solid #1A1A1A' }}>
+              {projects.map((project, index) => (
+                <Link
+                  key={project.id}
+                  href={`/bde/projects/${project.id}`}
+                  style={{
+                    display: 'block',
+                    textDecoration: 'none',
+                    borderBottom: index < projects.length - 1 ? '1px solid #1A1A1A' : 'none',
+                    transition: 'background 0.12s',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = '#0A0A0A')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: '13px', fontWeight: 600, color: '#F0F0F0', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {project.title}
+                      </p>
+                      <p style={{ fontSize: '11px', color: '#444' }}>
+                        {project.type}{project.location ? ` — ${project.location}` : ''}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+                      {statusBadge(project.status)}
+                      <span style={{ fontSize: '11px', color: '#444', whiteSpace: 'nowrap' }}>
+                        {new Date(project.start_date).toLocaleDateString('fr-FR')}
+                      </span>
                     </div>
                   </div>
-                  <div>
-                    <span
-                      className={`px-3 py-1 rounded text-xs font-medium ${
-                        project.status === 'published'
-                          ? 'bg-[#7C3AED]/20 text-[#7C3AED]'
-                          : project.status === 'in_progress'
-                          ? 'bg-[#00FF66]/20 text-[#00FF66]'
-                          : 'bg-white/20 text-white'
-                      }`}
-                    >
-                      {project.status === 'published' && 'Publié'}
-                      {project.status === 'in_progress' && 'En cours'}
-                      {project.status === 'completed' && 'Terminé'}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
           )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }
