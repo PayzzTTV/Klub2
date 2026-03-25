@@ -11,6 +11,7 @@ export default function DemoProjectsPage() {
   const supabase = createClient();
   const [projects, setProjects] = useState<ProjectWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(true);
 
   const [filters, setFilters] = useState({
     type: 'all',
@@ -21,8 +22,90 @@ export default function DemoProjectsPage() {
   });
 
   const [sortBy, setSortBy] = useState<'date' | 'budget' | 'capacity'>('date');
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 6;
+
+  // Mock data for demo mode
+  const mockProjects = [
+    {
+      id: '1',
+      title: 'Gala de fin d\'année 2026',
+      type: 'Gala' as const,
+      budget: 15000,
+      capacity: 500,
+      location: 'Paris',
+      start_date: '2026-06-15',
+      end_date: '2026-06-15',
+      description: 'Grand gala de fin d\'année avec 500 personnes. Besoin de prestataires son, lumière et DJ.',
+      bde_id: 'mock-bde-1',
+      status: 'published' as const,
+      feedback_given: false,
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+      bde_profile: {
+        name: 'BDE ESSEC',
+        organization_name: 'ESSEC Business School',
+      },
+    },
+    {
+      id: '2',
+      title: 'Festival Campus Summer',
+      type: 'Festival' as const,
+      budget: 25000,
+      capacity: 1000,
+      location: 'Lyon',
+      start_date: '2026-05-20',
+      end_date: '2026-05-22',
+      description: 'Festival outdoor sur 2 jours avec plusieurs scènes.',
+      bde_id: 'mock-bde-2',
+      status: 'published' as const,
+      feedback_given: false,
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+      bde_profile: {
+        name: 'BDE EM Lyon',
+        organization_name: 'EM Lyon Business School',
+      },
+    },
+    {
+      id: '3',
+      title: 'Soirée d\'intégration',
+      type: 'Soirée' as const,
+      budget: 8000,
+      capacity: 300,
+      location: 'Toulouse',
+      start_date: '2026-09-10',
+      end_date: '2026-09-10',
+      description: 'Soirée de rentrée pour accueillir les nouveaux étudiants.',
+      bde_id: 'mock-bde-3',
+      status: 'published' as const,
+      feedback_given: false,
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+      bde_profile: {
+        name: 'BDE Toulouse BS',
+        organization_name: 'Toulouse Business School',
+      },
+    },
+    {
+      id: '4',
+      title: 'Conférence Tech & Innovation',
+      type: 'Conférence' as const,
+      budget: 12000,
+      capacity: 200,
+      location: 'Paris',
+      start_date: '2026-04-05',
+      end_date: '2026-04-05',
+      description: 'Conférence avec speakers renommés. Besoin de matériel audiovisuel professionnel.',
+      bde_id: 'mock-bde-4',
+      status: 'published' as const,
+      feedback_given: false,
+      created_at: '2026-01-01',
+      updated_at: '2026-01-01',
+      bde_profile: {
+        name: 'BDE Télécom Paris',
+        organization_name: 'Télécom Paris',
+      },
+    },
+  ];
 
   const projectTypes = ['all', 'Gala', 'Soirée', 'Festival', 'Conférence', 'Autre'];
 
@@ -30,16 +113,12 @@ export default function DemoProjectsPage() {
   useEffect(() => {
     async function loadProjects() {
       const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push('/login'); return; }
 
-      if (!user) {
-        // Redirect to login if not authenticated
-        router.push('/login');
-        return;
-      }
-
+      setIsDemo(false);
       const supabaseProjects = await getPublishedProjects(supabase, {
         type: filters.type,
-        search: '' // Search is handled client-side
+        search: ''
       });
       setProjects(supabaseProjects || []);
       setLoading(false);
@@ -75,230 +154,353 @@ export default function DemoProjectsPage() {
       return 0;
     });
 
-  const totalPages = Math.ceil(filteredProjects.length / ITEMS_PER_PAGE);
-  const paginatedProjects = filteredProjects.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
+  const hasActiveFilters = filters.search || filters.type !== 'all' || filters.location || filters.budgetMin || filters.budgetMax;
 
   return (
-    <div className="min-h-screen bg-[#000000] py-8 sm:py-12 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="k-page">
+      <div className="k-page-inner">
 
-        <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Projets Disponibles</h1>
-          <p className="text-sm sm:text-base text-[#A0A0A0]">Découvrez les événements à venir et postulez en tant qu&apos;ORGA</p>
+        {/* Page header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '2.5rem' }}>
+          <div>
+            <div className="k-section-label" style={{ marginBottom: '0.75rem' }}>Marketplace</div>
+            <h1
+              className="k-neon"
+              style={{
+                fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+                fontWeight: 800,
+                letterSpacing: '-0.04em',
+                color: '#E8E8E8',
+                lineHeight: 1,
+              }}
+            >
+              Projets
+            </h1>
+          </div>
+          {!loading && (
+            <div style={{ textAlign: 'right', paddingTop: '0.25rem' }}>
+              <div
+                style={{
+                  fontSize: '2.5rem',
+                  fontWeight: 800,
+                  color: '#7C3AED',
+                  lineHeight: 1,
+                  letterSpacing: '-0.04em',
+                  fontFamily: 'Inter, system-ui, sans-serif',
+                }}
+              >
+                {filteredProjects.length}
+              </div>
+              <div style={{ fontSize: '0.7rem', color: '#F0F0F0', textTransform: 'uppercase', letterSpacing: '0.1em', marginTop: '0.25rem' }}>
+                résultats
+              </div>
+            </div>
+          )}
         </div>
 
+        {/* Loading state */}
         {loading && (
-          <div className="brutalist-card p-12 text-center">
-            <p className="text-[#A0A0A0]">Chargement des projets...</p>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '5rem 0' }}>
+            <div className="k-spinner" />
           </div>
         )}
 
         {!loading && (
           <>
-
-        {/* Filters */}
-        <div className="brutalist-card p-4 sm:p-6 mb-8">
-          <h2 className="text-base sm:text-lg font-bold mb-4 flex items-center gap-2">
-            🔍 Filtres de recherche
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <label className="block text-sm font-semibold mb-2">Rechercher</label>
-              <input
-                type="text"
-                value={filters.search}
-                onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
-                placeholder="Nom du projet, description, ville..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">Type d&apos;événement</label>
-              <select
-                value={filters.type}
-                onChange={(e) => setFilters({ ...filters, type: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
-              >
-                {projectTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type === 'all' ? 'Tous les types' : type}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">Ville</label>
-              <input
-                type="text"
-                value={filters.location}
-                onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
-                placeholder="Paris, Lyon..."
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">Budget minimum (€)</label>
-              <input
-                type="number"
-                value={filters.budgetMin}
-                onChange={(e) => setFilters({ ...filters, budgetMin: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
-                placeholder="5000"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2">Budget maximum (€)</label>
-              <input
-                type="number"
-                value={filters.budgetMax}
-                onChange={(e) => setFilters({ ...filters, budgetMax: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-[#1A1A1A] px-4 py-2 focus:outline-none focus:border-[#7C3AED] transition-colors"
-                placeholder="50000"
-              />
-            </div>
-          </div>
-
-          {/* Reset filters button */}
-          {(filters.search || filters.type !== 'all' || filters.location || filters.budgetMin || filters.budgetMax) && (
-            <button
-              onClick={() => setFilters({ type: 'all', search: '', budgetMin: '', budgetMax: '', location: '' })}
-              className="mt-4 text-sm text-[#7C3AED] hover:text-white transition-colors"
+            {/* Filter bar */}
+            <div
+              style={{
+                borderBottom: '1px solid #222',
+                paddingBottom: '1.25rem',
+                marginBottom: '1.5rem',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr auto auto auto',
+                gap: '1rem',
+                alignItems: 'end',
+              }}
             >
-              ✕ Réinitialiser les filtres
-            </button>
-          )}
-        </div>
+              {/* Search */}
+              <div>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.4rem' }}>
+                  Rechercher
+                </div>
+                <input
+                  type="text"
+                  value={filters.search}
+                  onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+                  className="k-input"
+                  style={{ width: '100%' }}
+                  placeholder="Titre, description, ville..."
+                />
+              </div>
 
-          {/* Results header with sort */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div className="text-sm text-[#A0A0A0]">
-              {filteredProjects.length} projet(s) trouvé(s){totalPages > 1 && ` — page ${currentPage}/${totalPages}`}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[#A0A0A0]">Trier par:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'date' | 'budget' | 'capacity')}
-                className="bg-[#0A0A0A] border border-[#1A1A1A] px-3 py-1 text-sm focus:outline-none focus:border-[#7C3AED] transition-colors"
-              >
-                <option value="date">Date</option>
-                <option value="budget">Budget (décroissant)</option>
-                <option value="capacity">Capacité (décroissant)</option>
-              </select>
-            </div>
-          </div>
+              {/* Location */}
+              <div>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.4rem' }}>
+                  Ville
+                </div>
+                <input
+                  type="text"
+                  value={filters.location}
+                  onChange={(e) => setFilters({ ...filters, location: e.target.value })}
+                  className="k-input"
+                  style={{ width: '100%' }}
+                  placeholder="Paris, Lyon..."
+                />
+              </div>
 
-          {filteredProjects.length === 0 ? (
-            <div className="brutalist-card p-12 text-center">
-              <p className="text-[#A0A0A0]">Aucun projet ne correspond à vos critères.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-              {paginatedProjects.map((project) => (
-                <div
-                  key={project.id}
-                  className="brutalist-card p-4 sm:p-6 hover:border-[#7C3AED] transition-colors"
+              {/* Budget min */}
+              <div>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.4rem' }}>
+                  Budget min
+                </div>
+                <input
+                  type="number"
+                  value={filters.budgetMin}
+                  onChange={(e) => setFilters({ ...filters, budgetMin: e.target.value })}
+                  className="k-input"
+                  style={{ width: '7rem' }}
+                  placeholder="5000"
+                />
+              </div>
+
+              {/* Budget max */}
+              <div>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.4rem' }}>
+                  Budget max
+                </div>
+                <input
+                  type="number"
+                  value={filters.budgetMax}
+                  onChange={(e) => setFilters({ ...filters, budgetMax: e.target.value })}
+                  className="k-input"
+                  style={{ width: '7rem' }}
+                  placeholder="50000"
+                />
+              </div>
+
+              {/* Sort */}
+              <div>
+                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.4rem' }}>
+                  Trier
+                </div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'date' | 'budget' | 'capacity')}
+                  className="k-select"
+                  style={{ width: '10rem' }}
                 >
-                  <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg sm:text-xl font-bold mb-1">{project.title}</h3>
-                      <p className="text-xs sm:text-sm text-[#A0A0A0]">
-                        {project.bde_profile?.organization_name || project.bde_profile?.name || 'BDE'}
-                      </p>
-                    </div>
-                    <span className="px-3 py-1 bg-[#7C3AED]/20 text-[#7C3AED] text-xs font-bold rounded whitespace-nowrap">
-                      {project.type}
-                    </span>
-                  </div>
+                  <option value="date">Date</option>
+                  <option value="budget">Budget</option>
+                  <option value="capacity">Capacité</option>
+                </select>
+              </div>
+            </div>
 
-                  <p className="text-sm text-[#A0A0A0] mb-4 line-clamp-2">
-                    {project.description}
-                  </p>
+            {/* Type filter pills */}
+            <div style={{ display: 'flex', gap: '0', marginBottom: '2rem', flexWrap: 'wrap' }}>
+              {projectTypes.map((type) => {
+                const isActive = filters.type === type;
+                return (
+                  <button
+                    key={type}
+                    onClick={() => setFilters({ ...filters, type })}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: isActive ? '2px solid #7C3AED' : '2px solid transparent',
+                      color: isActive ? '#F0F0F0' : '#A0A0A0',
+                      fontSize: '0.8rem',
+                      fontWeight: isActive ? 700 : 400,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      padding: '0.4rem 1rem',
+                      cursor: 'pointer',
+                      transition: 'color 0.15s, border-color 0.15s',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = '#F0F0F0';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = '#A0A0A0';
+                    }}
+                  >
+                    {type === 'all' ? 'Tous' : type}
+                  </button>
+                );
+              })}
 
-                  <div className="space-y-2 mb-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#A0A0A0]">💰</span>
-                      <span className="font-semibold">{project.budget?.toLocaleString('fr-FR') || '0'} €</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#A0A0A0]">👥</span>
-                      <span>{project.capacity || 0} personnes</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#A0A0A0]">📍</span>
-                      <span>{project.location}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[#A0A0A0]">📅</span>
-                      <span>
-                        {new Date(project.start_date).toLocaleDateString('fr-FR', {
-                          day: 'numeric',
-                          month: 'long',
-                          year: 'numeric',
-                        })}
+              {hasActiveFilters && (
+                <button
+                  onClick={() => setFilters({ type: 'all', search: '', budgetMin: '', budgetMax: '', location: '' })}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: '2px solid transparent',
+                    color: '#FF0055',
+                    fontSize: '0.75rem',
+                    fontWeight: 500,
+                    letterSpacing: '0.06em',
+                    padding: '0.4rem 1rem',
+                    cursor: 'pointer',
+                    marginLeft: 'auto',
+                    transition: 'color 0.15s',
+                  }}
+                >
+                  Réinitialiser
+                </button>
+              )}
+            </div>
+
+            {/* Empty state */}
+            {filteredProjects.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '6rem 2rem' }}>
+                <div
+                  style={{
+                    fontSize: '6rem',
+                    fontWeight: 800,
+                    color: '#111',
+                    letterSpacing: '-0.05em',
+                    lineHeight: 1,
+                    marginBottom: '1rem',
+                  }}
+                >
+                  0
+                </div>
+                <div style={{ fontSize: '0.85rem', color: '#F0F0F0', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                  Aucun projet ne correspond à vos critères
+                </div>
+              </div>
+            ) : (
+              /* Projects grid */
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '1px',
+                  background: '#111',
+                }}
+              >
+                {filteredProjects.map((project) => (
+                  <div
+                    key={project.id}
+                    className="k-card"
+                    style={{ background: '#000' }}
+                  >
+                    {/* Top row: title + type badge */}
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', marginBottom: '0.75rem' }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <h3
+                          style={{
+                            fontSize: '1.05rem',
+                            fontWeight: 700,
+                            color: '#E8E8E8',
+                            letterSpacing: '-0.02em',
+                            marginBottom: '0.2rem',
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          {project.title}
+                        </h3>
+                        <div style={{ fontSize: '0.7rem', color: '#F0F0F0', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                          {project.bde_profile?.organization_name || project.bde_profile?.name || 'BDE'}
+                        </div>
+                      </div>
+                      <span className="k-badge k-badge-violet" style={{ flexShrink: 0 }}>
+                        {project.type}
                       </span>
                     </div>
-                  </div>
 
-                  <div className="flex gap-3">
-                    <Link
-                      href={`/projects/${project.id}/apply`}
-                      className="brutalist-button-primary px-4 py-2 text-sm flex-1 text-center"
+                    {/* Description */}
+                    <p
+                      style={{
+                        fontSize: '0.8rem',
+                        color: '#E8E8E8',
+                        lineHeight: 1.55,
+                        marginBottom: '1.25rem',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                      }}
                     >
-                      Candidater
-                    </Link>
-                    <Link
-                      href={`/projects/${project.id}`}
-                      className="brutalist-button px-4 py-2 text-sm text-center"
-                    >
-                      Voir détails
-                    </Link>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                      {project.description}
+                    </p>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-8">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="px-4 py-2 border border-[#1A1A1A] text-sm disabled:opacity-30 hover:border-[#7C3AED] transition-colors"
-              >
-                ← Précédent
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`px-4 py-2 border text-sm transition-colors ${
-                    page === currentPage
-                      ? 'border-[#7C3AED] bg-[#7C3AED]/20 text-white'
-                      : 'border-[#1A1A1A] hover:border-[#7C3AED]'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="px-4 py-2 border border-[#1A1A1A] text-sm disabled:opacity-30 hover:border-[#7C3AED] transition-colors"
-              >
-                Suivant →
-              </button>
-            </div>
-          )}
-        </>
+                    <hr className="k-divider" style={{ marginBottom: '1.25rem' }} />
+
+                    {/* Metadata grid */}
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '0.75rem 1.5rem',
+                        marginBottom: '1.5rem',
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.2rem' }}>
+                          Budget
+                        </div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#00FF66' }}>
+                          {project.budget?.toLocaleString('fr-FR') || '0'} €
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.2rem' }}>
+                          Capacité
+                        </div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#E8E8E8' }}>
+                          {project.capacity || 0} pers.
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.2rem' }}>
+                          Lieu
+                        </div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#E8E8E8' }}>
+                          {project.location}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div style={{ fontSize: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F0F0F0', marginBottom: '0.2rem' }}>
+                          Date
+                        </div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#E8E8E8' }}>
+                          {new Date(project.start_date).toLocaleDateString('fr-FR', {
+                            day: 'numeric',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div style={{ display: 'flex', gap: '0.75rem' }}>
+                      <Link
+                        href={`/projects/${project.id}/apply`}
+                        className="k-btn"
+                        style={{ flex: 1, textAlign: 'center', textDecoration: 'none', display: 'block' }}
+                      >
+                        Candidater
+                      </Link>
+                      <Link
+                        href={`/projects/${project.id}`}
+                        className="k-btn-ghost"
+                        style={{ textAlign: 'center', textDecoration: 'none', display: 'block', padding: '0 1.25rem' }}
+                      >
+                        Voir détails
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
