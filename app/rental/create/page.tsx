@@ -5,10 +5,12 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { createRentalItem } from '@/lib/utils/inventory';
 import type { InventoryCategory } from '@/types';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function CreateRentalPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
 
   const [currentUserId, setCurrentUserId] = useState<string>('');
   const [loading, setLoading] = useState(false);
@@ -47,14 +49,14 @@ export default function CreateRentalPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + imageFiles.length > 5) {
-      alert('Maximum 5 images autorisées');
+      toast.warning('Maximum 5 images autorisées');
       return;
     }
 
     // Vérifier la taille (max 5MB par image)
     const oversized = files.filter(f => f.size > 5 * 1024 * 1024);
     if (oversized.length > 0) {
-      alert('Certaines images dépassent 5MB. Veuillez compresser vos images.');
+      toast.warning('Certaines images dépassent 5MB. Veuillez compresser vos images.');
       return;
     }
 
@@ -110,7 +112,7 @@ export default function CreateRentalPage() {
       return uploadedUrls;
     } catch (error) {
       console.error('Error uploading images:', error);
-      alert('Erreur lors de l\'upload des images. Veuillez réessayer.');
+      toast.error('Erreur lors de l\'upload des images. Veuillez réessayer.');
       return [];
     } finally {
       setUploadingImages(false);
@@ -121,7 +123,7 @@ export default function CreateRentalPage() {
     e.preventDefault();
 
     if (!formData.title || !formData.daily_price || !formData.location) {
-      alert('Veuillez remplir tous les champs obligatoires');
+      toast.warning('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -145,12 +147,12 @@ export default function CreateRentalPage() {
       });
 
       if (newItem) {
-        alert('✅ Matériel ajouté avec succès !');
+        toast.success('Matériel ajouté avec succès !');
         router.push(`/rental/${newItem.id}`);
       }
     } catch (error) {
       console.error('Error creating item:', error);
-      alert('❌ Erreur lors de la création. Veuillez réessayer.');
+      toast.error('Erreur lors de la création. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -198,6 +200,7 @@ export default function CreateRentalPage() {
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {imagePreviews.map((preview, index) => (
                   <div key={index} className="relative group">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={preview}
                       alt={`Preview ${index + 1}`}
@@ -237,7 +240,7 @@ export default function CreateRentalPage() {
 
             {/* Titre */}
             <div>
-              <label className="block text-sm font-medium mb-2">Titre de l'annonce *</label>
+              <label className="block text-sm font-medium mb-2">Titre de l&apos;annonce *</label>
               <input
                 type="text"
                 value={formData.title}
@@ -354,7 +357,7 @@ export default function CreateRentalPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Année d'achat</label>
+                <label className="block text-sm font-medium mb-2">Année d&apos;achat</label>
                 <input
                   type="text"
                   value={formData.specifications.annee}
@@ -403,6 +406,7 @@ export default function CreateRentalPage() {
           </div>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 }

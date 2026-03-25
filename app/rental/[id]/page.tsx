@@ -30,10 +30,12 @@ export default function RentalDetailPage() {
   const { toast, ToastContainer } = useToast();
 
   const [equipment, setEquipment] = useState<InventoryItemWithOwner | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [ownerStats, setOwnerStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [bookedDates, setBookedDates] = useState<any[]>([]);
 
   const [selectedImage, setSelectedImage] = useState(0);
@@ -308,6 +310,7 @@ export default function RentalDetailPage() {
               <div className="brutalist-card p-4 sm:p-6 mt-6">
                 <h2 className="text-lg sm:text-xl font-bold mb-4">Spécifications Techniques</h2>
                 <div className="space-y-3">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {Object.entries(equipment.specifications).map(([key, value]: [string, any]) => (
                     <div key={key} className="flex items-start justify-between pb-3 border-b border-[#1A1A1A] last:border-0">
                       <span className="text-sm text-[#A0A0A0] capitalize">
@@ -376,7 +379,7 @@ export default function RentalDetailPage() {
               {currentUserId === equipment.owner_id ? (
                 <div className="brutalist-card p-4 bg-blue-900/20 border-blue-700">
                   <p className="text-sm text-center">
-                    ℹ️ C'est votre propre équipement. Vous ne pouvez pas le louer.
+                    ℹ️ C&apos;est votre propre équipement. Vous ne pouvez pas le louer.
                   </p>
                 </div>
               ) : equipment.available ? (

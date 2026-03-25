@@ -1,11 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 3ème Voie DevOps : Qualité non-négociable
+  // eslint et typescript checks activés — corriger les erreurs, ne pas les ignorer
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   // Disable Turbopack due to stability issues
   experimental: {

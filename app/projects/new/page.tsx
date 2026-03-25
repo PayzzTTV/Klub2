@@ -86,6 +86,7 @@ export default function NewProjectPage() {
       if (insertError) throw insertError;
 
       router.push(`/projects/${data.id}`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la création du projet');
     } finally {
@@ -147,7 +148,7 @@ export default function NewProjectPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label htmlFor="type" className="block text-sm font-medium mb-2">
-                    Type d'événement *
+                    Type d&apos;événement *
                   </label>
                   <select
                     id="type"
@@ -251,7 +252,7 @@ export default function NewProjectPage() {
             <div className="space-y-6">
               <div>
                 <label htmlFor="description" className="block text-sm font-medium mb-2">
-                  Description de l'événement *
+                  Description de l&apos;événement *
                 </label>
                 <textarea
                   id="description"

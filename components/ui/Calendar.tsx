@@ -32,8 +32,6 @@ export default function Calendar({ bookedDates, selectedRange, onDateSelect, min
 
   // Check if a date is booked
   const isDateBooked = (date: Date): { booked: boolean; status?: string } => {
-    const dateStr = date.toISOString().split('T')[0];
-
     for (const booking of bookedDates) {
       if (booking.status === 'cancelled') continue;
 
