@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Syne } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
 
-const inter = Inter({
+const syne = Syne({
   subsets: ["latin"],
+  weight: ["400", "700", "800"],
   variable: "--font-sans",
   display: "swap",
 });
@@ -44,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr" className="dark">
-      <body className={`${inter.variable} antialiased min-h-screen`}>
+      <body className={`${syne.variable} antialiased min-h-screen`}>
         <Header />
         {children}
       </body>
