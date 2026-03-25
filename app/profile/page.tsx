@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 type UserProfile = {
   id: string;
@@ -26,127 +27,112 @@ export default function ProfilePage() {
   useEffect(() => {
     async function loadProfile() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
+      if (!user) { router.push('/login'); return; }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error loading profile:', error);
-        return;
-      }
-
-      setProfile(data as UserProfile);
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+      if (data) { setProfile(data as UserProfile); }
       setLoading(false);
     }
-
     loadProfile();
   }, []);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-[#A0A0A0]">Chargement...</div>
+      <div className="k-page" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="k-spinner" />
       </div>
     );
   }
 
   if (!profile) return null;
 
+  const initial = profile.name.charAt(0).toUpperCase();
+  const memberSince = new Date(profile.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  const isActive = profile.role === 'BDE';
+
   return (
-    <div className="min-h-screen bg-black py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+    <div className="k-page">
+      <div className="k-page-inner">
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Mon Profil</h1>
-          <p className="text-[#A0A0A0]">Gérez vos informations personnelles</p>
+        <div style={{ marginBottom: '40px', paddingBottom: '40px', borderBottom: '1px solid #1A1A1A' }}>
+          <p className="k-section-label mb-3">Mon compte</p>
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 800, color: '#F0F0F0', letterSpacing: '-0.02em' }}>
+              Mon Profil
+            </h1>
+            <Link
+              href="/settings"
+              style={{
+                fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: '#F0F0F0', textDecoration: 'none', border: '1px solid #2A2A2A',
+                padding: '8px 16px', transition: 'border-color 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#7C3AED')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#2A2A2A')}
+            >
+              Modifier →
+            </Link>
+          </div>
         </div>
 
-        {/* Avatar & Info principale */}
-        <div className="brutalist-card p-8 mb-6">
-          <div className="flex items-start gap-6">
-            {/* Avatar */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#7C3AED] to-[#00FF66] flex items-center justify-center text-white font-bold text-4xl">
-              {profile.name.charAt(0).toUpperCase()}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h2 className="text-2xl font-bold text-white">{profile.name}</h2>
-                <span className={`px-3 py-1 text-xs font-bold border ${
-                  profile.role === 'BDE'
-                    ? 'border-[#7C3AED] text-[#7C3AED] bg-[#7C3AED]/10'
-                    : 'border-[#00FF66] text-[#00FF66] bg-[#00FF66]/10'
-                }`}>
-                  {profile.role}
-                </span>
-              </div>
-
-              {profile.organization_name && (
-                <p className="text-[#A0A0A0] mb-4">{profile.organization_name}</p>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-[#A0A0A0]">Email:</span>
-                  <p className="text-white font-medium">{profile.email}</p>
-                </div>
-
-                {profile.phone && (
-                  <div>
-                    <span className="text-[#A0A0A0]">Téléphone:</span>
-                    <p className="text-white font-medium">{profile.phone}</p>
-                  </div>
-                )}
-
-                {profile.location && (
-                  <div>
-                    <span className="text-[#A0A0A0]">Localisation:</span>
-                    <p className="text-white font-medium">{profile.location}</p>
-                  </div>
-                )}
-
-                <div>
-                  <span className="text-[#A0A0A0]">Membre depuis:</span>
-                  <p className="text-white font-medium">
-                    {new Date(profile.created_at).toLocaleDateString('fr-FR')}
-                  </p>
-                </div>
-              </div>
-            </div>
+        {/* Avatar + identité */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '32px', alignItems: 'start', marginBottom: '40px' }}>
+          {/* Avatar */}
+          <div style={{
+            width: '80px', height: '80px', background: '#7C3AED',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '28px', fontWeight: 800, color: '#fff', flexShrink: 0,
+          }}>
+            {initial}
           </div>
 
-          {profile.bio && (
-            <div className="mt-6 pt-6 border-t border-[#1A1A1A]">
-              <h3 className="text-sm font-semibold text-[#A0A0A0] mb-2">Bio</h3>
-              <p className="text-white">{profile.bio}</p>
+          {/* Info principale */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#F0F0F0', letterSpacing: '-0.02em' }}>
+                {profile.name}
+              </h2>
+              <span
+                style={{
+                  fontSize: '9px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase',
+                  padding: '3px 8px', border: `1px solid ${isActive ? '#7C3AED' : '#00FF66'}`,
+                  color: isActive ? '#7C3AED' : '#00FF66',
+                }}
+              >
+                {profile.role}
+              </span>
             </div>
-          )}
+            {profile.organization_name && (
+              <p style={{ fontSize: '13px', color: '#A0A0A0', marginBottom: '4px' }}>{profile.organization_name}</p>
+            )}
+            <p style={{ fontSize: '11px', color: '#444', letterSpacing: '0.06em' }}>Membre depuis {memberSince}</p>
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex gap-4">
-          <button
-            onClick={() => router.push('/settings')}
-            className="brutalist-button-primary px-6 py-3"
-          >
-            ✏️ Modifier mon profil
-          </button>
-
-          <button
-            onClick={() => router.back()}
-            className="brutalist-button px-6 py-3"
-          >
-            ← Retour
-          </button>
+        {/* Infos grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1px', background: '#1A1A1A', border: '1px solid #1A1A1A', marginBottom: '40px' }}>
+          {[
+            { label: 'Email', value: profile.email },
+            { label: 'Téléphone', value: profile.phone || '—' },
+            { label: 'Localisation', value: profile.location || '—' },
+            { label: 'Rôle', value: profile.role },
+          ].map((item) => (
+            <div key={item.label} style={{ background: '#000', padding: '20px 24px' }}>
+              <p className="k-section-label mb-2">{item.label}</p>
+              <p style={{ fontSize: '14px', color: item.value === '—' ? '#333' : '#F0F0F0', fontWeight: 500 }}>{item.value}</p>
+            </div>
+          ))}
         </div>
+
+        {/* Bio */}
+        {profile.bio && (
+          <div style={{ border: '1px solid #1A1A1A', padding: '24px', marginBottom: '40px' }}>
+            <p className="k-section-label mb-3">Bio</p>
+            <p style={{ fontSize: '14px', color: '#F0F0F0', lineHeight: 1.7 }}>{profile.bio}</p>
+          </div>
+        )}
+
       </div>
     </div>
   );

@@ -9,6 +9,7 @@ export default function ApplicationDetailPage() {
   const appId = params.appId as string;
 
   // Mock data détaillée pour les candidatures
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mockApplications: Record<string, any> = {
     '1': {
       id: '1',
@@ -322,6 +323,7 @@ export default function ApplicationDetailPage() {
             <div className="brutalist-card p-6">
               <h3 className="text-lg font-bold mb-4">Historique</h3>
               <div className="space-y-3">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {application.timeline.map((item: any, index: number) => (
                   <div key={index} className="flex gap-3">
                     <div className="w-2 h-2 bg-[#7C3AED] rounded-full mt-2"></div>
