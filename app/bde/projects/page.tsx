@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useToast } from '@/lib/hooks/useToast';
 
 type Project = {
   id: string;
@@ -22,6 +23,7 @@ export default function BDEProjectsPage() {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
 
   useEffect(() => {
     async function loadProjects() {
@@ -76,10 +78,10 @@ export default function BDEProjectsPage() {
 
       // Reload projects
       setProjects(projects.filter(p => p.id !== projectId));
-      alert('✅ Projet supprimé avec succès !');
+      toast.success('Projet supprimé avec succès !');
     } catch (err) {
       console.error('Error deleting project:', err);
-      alert('❌ Erreur lors de la suppression');
+      toast.error('Erreur lors de la suppression');
     }
   };
 
@@ -289,6 +291,7 @@ export default function BDEProjectsPage() {
           </>
         )}
       </div>
+      <ToastContainer />
     </div>
   );
 }

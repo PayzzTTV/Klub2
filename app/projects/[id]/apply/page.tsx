@@ -7,11 +7,13 @@ import { createClient } from '@/lib/supabase/client';
 import { getProjectById } from '@/lib/utils/projects';
 import { createApplication } from '@/lib/utils/projects';
 import type { Project } from '@/types';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function ApplyPage() {
   const params = useParams();
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
   const projectId = params.id as string;
 
   const [project, setProject] = useState<Project | null>(null);
@@ -99,7 +101,7 @@ export default function ApplyPage() {
     );
 
     if (application) {
-      alert('✅ Candidature envoyée avec succès !');
+      toast.success('Candidature envoyée avec succès !');
       router.push(`/projects/${projectId}`);
     } else {
       setError('Erreur lors de l\'envoi de la candidature. Vous avez peut-être déjà postulé à ce projet.');
@@ -271,6 +273,7 @@ export default function ApplyPage() {
           </div>
         </div>
       </main>
+      <ToastContainer />
     </div>
   );
 }
