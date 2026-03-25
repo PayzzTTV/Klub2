@@ -5,13 +5,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { createProject } from '@/lib/utils/projects';
+import { getProfile } from '@/lib/utils/profiles';
+import { hasPendingFeedback } from '@/lib/utils/projects';
 
-export default function DemoCreateProjectPage() {
+export default function CreateProjectPage() {
   const router = useRouter();
   const supabase = createClient();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isDemo, setIsDemo] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -26,16 +29,22 @@ export default function DemoCreateProjectPage() {
 
   const projectTypes = ['Gala', 'Soirée', 'Festival', 'Conférence', 'Autre'];
 
-  // Check authentication
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-        setIsDemo(false);
-      } else {
-        setIsDemo(true);
+      if (!user) {
+        router.push('/login');
+        return;
       }
+
+      const profile = await getProfile(supabase, user.id);
+      if (!profile || profile.role !== 'BDE') {
+        router.push('/login');
+        return;
+      }
+
+      setCurrentUserId(user.id);
+      setLoading(false);
     }
     checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -43,51 +52,66 @@ export default function DemoCreateProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setSubmitting(true);
 
-    if (!isDemo && currentUserId) {
-      // Production mode: Save to Supabase
-      console.log('Form data before parsing:', formData);
-
-      const projectData = {
-        title: formData.title,
-        type: formData.type as any,
-        budget: parseFloat(formData.budget),
-        capacity: parseInt(formData.capacity),
-        location: formData.location,
-        description: formData.description,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-      };
-
-      console.log('Parsed project data:', projectData);
-      console.log('Budget:', projectData.budget, 'Capacity:', projectData.capacity);
-
-      const newProject = await createProject(supabase, currentUserId, projectData);
-
-      if (newProject) {
-        alert('✅ Projet créé avec succès !');
-        router.push(`/projects/${newProject.id}`);
-      } else {
-        alert('❌ Erreur lors de la création du projet. Vérifiez vos permissions.');
-        setSubmitting(false);
-      }
-    } else {
-      // Demo mode: Just show alert
-      alert('Mode Démo : Le projet a été créé avec succès ! (Données non enregistrées)');
+    if (!currentUserId) {
+      setError('Vous devez être connecté pour créer un projet.');
       setSubmitting(false);
-      router.push('/bde/dashboard');
+      return;
+    }
+
+    // Check for pending feedback before allowing new project
+    const pendingFeedback = await hasPendingFeedback(supabase, currentUserId);
+    if (pendingFeedback) {
+      setError('Vous devez donner votre feedback sur vos projets terminés avant de créer un nouveau projet.');
+      setSubmitting(false);
+      return;
+    }
+
+    const projectData = {
+      title: formData.title,
+      type: formData.type as any,
+      budget: parseFloat(formData.budget),
+      capacity: parseInt(formData.capacity),
+      location: formData.location,
+      description: formData.description,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+    };
+
+    const newProject = await createProject(supabase, currentUserId, projectData);
+
+    if (newProject) {
+      router.push(`/projects/${newProject.id}`);
+    } else {
+      setError('Erreur lors de la création du projet. Veuillez réessayer.');
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#000000]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#000000] py-12 px-4">
       <div className="max-w-7xl mx-auto">
-      
+
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Créer un Projet</h1>
           <p className="text-[#A0A0A0]">Postez votre événement et trouvez les meilleurs prestataires</p>
         </div>
+
+        {error && (
+          <div className="mb-6 bg-[#FF0055]/10 border border-[#FF0055] p-4 rounded text-sm text-[#FF0055]">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Titre */}
