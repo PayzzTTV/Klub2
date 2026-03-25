@@ -4,16 +4,16 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { createProject } from '@/lib/utils/projects';
+import { createProject, hasPendingFeedback } from '@/lib/utils/projects';
 import { getProfile } from '@/lib/utils/profiles';
-import { hasPendingFeedback } from '@/lib/utils/projects';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function CreateProjectPage() {
   const router = useRouter();
   const supabase = createClient();
+  const { toast, ToastContainer } = useToast();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
@@ -52,25 +52,26 @@ export default function CreateProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setSubmitting(true);
 
     if (!currentUserId) {
-      setError('Vous devez être connecté pour créer un projet.');
+      toast.error('Vous devez être connecté pour créer un projet.');
       setSubmitting(false);
       return;
     }
 
-    // Check for pending feedback before allowing new project
+    // Vérifier les feedbacks en attente (bloque la RLS si non donné)
     const pendingFeedback = await hasPendingFeedback(supabase, currentUserId);
     if (pendingFeedback) {
-      setError('Vous devez donner votre feedback sur vos projets terminés avant de créer un nouveau projet.');
+      toast.error('Vous devez donner votre feedback sur vos projets terminés avant de créer un nouveau projet.');
       setSubmitting(false);
       return;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projectData = {
       title: formData.title,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       type: formData.type as any,
       budget: parseFloat(formData.budget),
       capacity: parseInt(formData.capacity),
@@ -83,9 +84,10 @@ export default function CreateProjectPage() {
     const newProject = await createProject(supabase, currentUserId, projectData);
 
     if (newProject) {
+      toast.success('Projet créé avec succès !');
       router.push(`/projects/${newProject.id}`);
     } else {
-      setError('Erreur lors de la création du projet. Veuillez réessayer.');
+      toast.error('Erreur lors de la création du projet. Veuillez réessayer.');
       setSubmitting(false);
     }
   };
@@ -106,12 +108,6 @@ export default function CreateProjectPage() {
           <h1 className="text-4xl font-bold mb-2">Créer un Projet</h1>
           <p className="text-[#A0A0A0]">Postez votre événement et trouvez les meilleurs prestataires</p>
         </div>
-
-        {error && (
-          <div className="mb-6 bg-[#FF0055]/10 border border-[#FF0055] p-4 rounded text-sm text-[#FF0055]">
-            {error}
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Titre */}
@@ -239,6 +235,7 @@ export default function CreateProjectPage() {
           </div>
         </form>
       </div>
+      <ToastContainer />
     </div>
   );
 }
