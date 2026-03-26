@@ -104,6 +104,19 @@ export default function ManageRentalsPage() {
     }
   };
 
+  const handleDeleteItem = async (itemId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!confirm('Supprimer cet équipement ?')) return;
+    const { error } = await supabase.from('inventory').delete().eq('id', itemId);
+    if (error) {
+      toast.error('Erreur lors de la suppression');
+    } else {
+      toast.success('Équipement supprimé');
+      setMyItems(myItems.filter(i => i.id !== itemId));
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const badges = {
       pending: '⏳ En attente',
@@ -259,11 +272,15 @@ export default function ManageRentalsPage() {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {myItems.map((item) => (
-                  <Link
-                    key={item.id}
-                    href={`/rental/${item.id}`}
-                    className="brutalist-card overflow-hidden hover:border-purple-600 transition-all group"
-                  >
+                  <div key={item.id} className="brutalist-card overflow-hidden hover:border-purple-600 transition-all group relative">
+                    <button
+                      onClick={(e) => handleDeleteItem(item.id, e)}
+                      className="absolute top-3 right-3 z-10 bg-[#FF0055] text-white px-2 py-1 text-xs font-semibold hover:bg-[#cc0044] transition-colors"
+                      title="Supprimer"
+                    >
+                      🗑️
+                    </button>
+                    <Link href={`/rental/${item.id}`} className="block">
                     {/* Image */}
                     <div className="relative aspect-video overflow-hidden bg-gray-900">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -315,7 +332,8 @@ export default function ManageRentalsPage() {
                         <span>📍 {item.location}</span>
                       </div>
                     </div>
-                  </Link>
+                    </Link>
+                  </div>
                 ))}
               </div>
             )}
