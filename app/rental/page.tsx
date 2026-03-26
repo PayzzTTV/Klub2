@@ -418,10 +418,6 @@ export default function DemoRentalPage() {
                     </div>
                   )}
 
-                  {/* Category badge */}
-                  <div style={{ position: 'absolute', top: '10px', left: '10px' }}>
-                    <span className="k-badge k-badge-violet">{item.category}</span>
-                  </div>
                 </div>
 
                 {/* Card Content */}
