@@ -3,45 +3,22 @@
 import Link from 'next/link';
 import { Syne } from 'next/font/google';
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 const syne = Syne({ subsets: ['latin'], weight: ['400', '700', '800'] });
-
-const TICKER_ITEMS = [
-  'Événements Étudiants', 'Location Matériel', 'BDE & Orgas', 'Réputation Vérifiée',
-  'Son · Image · Lumière', 'Gala · Festival · Soirée', 'Communauté', 'Feedback Obligatoire',
-  'Événements Étudiants', 'Location Matériel', 'BDE & Orgas', 'Réputation Vérifiée',
-];
-
-const FEATURES = [
-  {
-    num: '01',
-    title: 'Marketplace Projets',
-    desc: 'Les BDE publient leurs événements. Les orgas candidatent, négocient, et collaborent. Tout dans un seul espace structuré.',
-    tag: 'Pour les BDE',
-  },
-  {
-    num: '02',
-    title: 'Rental Hub',
-    desc: 'Son, image, lumière, logistique. Louez du matériel entre communautés, gérez les disponibilités, tracez chaque transaction.',
-    tag: 'BDE & Orgas',
-  },
-  {
-    num: '03',
-    title: 'Réputation & Ranking',
-    desc: 'Feedback obligatoire après chaque projet. Score global pondéré. Les meilleures orgas remontent, les mauvaises disparaissent.',
-    tag: 'Système de confiance',
-  },
-];
 
 export default function Home() {
   const tickerRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
+  const { lang, setLang, t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const tickerItems = [...t.home.ticker, ...t.home.ticker];
 
   return (
     <>
@@ -235,7 +212,6 @@ export default function Home() {
           pointer-events: none;
         }
 
-        /* ── ANIMATED BG BLOBS ── */
         .bg-canvas {
           position: fixed;
           inset: 0;
@@ -281,26 +257,25 @@ export default function Home() {
         }
 
         @keyframes drift1 {
-          0%,100% { transform: translate(0,    0)   scale(1);    }
-          33%     { transform: translate(80px, 120px) scale(1.1); }
-          66%     { transform: translate(-40px, 60px) scale(0.95); }
+          0%,100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(80px, 120px) scale(1.1); }
+          66% { transform: translate(-40px, 60px) scale(0.95); }
         }
         @keyframes drift2 {
-          0%,100% { transform: translate(0,    0)    scale(1);   }
-          33%     { transform: translate(-100px, -80px) scale(1.15); }
-          66%     { transform: translate(60px, -40px) scale(0.9); }
+          0%,100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-100px, -80px) scale(1.15); }
+          66% { transform: translate(60px, -40px) scale(0.9); }
         }
         @keyframes drift3 {
-          0%,100% { transform: translate(0,   0)   scale(1);   }
-          50%     { transform: translate(-120px, 80px) scale(1.2); }
+          0%,100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-120px, 80px) scale(1.2); }
         }
         @keyframes drift4 {
-          0%,100% { transform: translate(0, 0)    scale(1);   }
-          40%     { transform: translate(80px, -60px) scale(1.1); }
-          80%     { transform: translate(-40px, 40px) scale(0.9); }
+          0%,100% { transform: translate(0, 0) scale(1); }
+          40% { transform: translate(80px, -60px) scale(1.1); }
+          80% { transform: translate(-40px, 40px) scale(0.9); }
         }
 
-        /* Grain overlay */
         .grain {
           position: fixed;
           inset: -200%;
@@ -326,6 +301,24 @@ export default function Home() {
           90%  { transform: translate(3%, 1%); }
           100% { transform: translate(-2%, 3%); }
         }
+
+        .lang-toggle-home {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          background: none;
+          border: 1px solid #1A1A1A;
+          cursor: pointer;
+          padding: 4px 10px;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #555;
+          font-family: inherit;
+          transition: border-color 0.2s, color 0.2s;
+        }
+        .lang-toggle-home:hover { border-color: #7C3AED; color: #7C3AED; }
       `}</style>
 
       <div className={`min-h-screen bg-black text-white ${syne.className}`} style={{ position: 'relative' }}>
@@ -359,13 +352,23 @@ export default function Home() {
           </Link>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-            <Link href="/rental" className="nav-link">Matériel</Link>
-            <Link href="/projects" className="nav-link">Projets</Link>
+            <Link href="/rental" className="nav-link">{t.nav.equipment}</Link>
+            <Link href="/projects" className="nav-link">{t.nav.projects}</Link>
             <div style={{ width: '1px', height: '16px', background: '#1A1A1A' }} />
-            <Link href="/login" className="nav-link">Connexion</Link>
+            <Link href="/login" className="nav-link">{t.nav.login}</Link>
             <Link href="/signup" className="lp-btn-primary" style={{ padding: '8px 18px', fontSize: '11px' }}>
-              S'inscrire
+              {t.nav.signup}
             </Link>
+            {/* Language toggle */}
+            <button
+              className="lang-toggle-home"
+              onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+              title={lang === 'fr' ? 'Switch to English' : 'Passer en français'}
+            >
+              <span style={{ color: lang === 'fr' ? '#fff' : '#555' }}>FR</span>
+              <span style={{ color: '#333' }}>/</span>
+              <span style={{ color: lang === 'en' ? '#fff' : '#555' }}>EN</span>
+            </button>
           </div>
         </nav>
 
@@ -379,7 +382,6 @@ export default function Home() {
           zIndex: 2,
           overflow: 'hidden',
         }}>
-          {/* Glow */}
           <div style={{
             position: 'absolute', width: '800px', height: '800px', borderRadius: '50%',
             background: 'radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)',
@@ -390,12 +392,10 @@ export default function Home() {
             flex: 1, display: 'flex', flexDirection: 'column',
             justifyContent: 'center', padding: '60px 40px 40px',
           }}>
-            {/* Label */}
             <div className="section-label fu" style={{ marginBottom: '32px' }}>
-              Plateforme Intercommunautaire 2026
+              {t.home.platformLabel}
             </div>
 
-            {/* Big title */}
             <div className="fu-d1" style={{ marginBottom: '40px' }}>
               <h1 className="big-title neon-text">
                 KL<span style={{ color: '#7C3AED' }}>U</span>B
@@ -408,43 +408,38 @@ export default function Home() {
                 marginTop: '16px',
                 paddingLeft: '4px',
               }}>
-                BDE × Organisateurs × Matériel
+                {t.home.subtitle}
               </div>
             </div>
 
-            {/* Description + CTAs */}
             <div className="fu-d2" style={{
               display: 'flex',
               flexDirection: 'column' as const,
               gap: '32px',
               maxWidth: '600px',
             }}>
-              <p className="hero-tagline">
-                La plateforme qui connecte les bureaux des étudiants et les organisateurs d'événements.
-                Projets, matériel, réputation — tout au même endroit.
-              </p>
+              <p className="hero-tagline">{t.home.tagline}</p>
 
               <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' as const }}>
                 <Link href="/signup" className="lp-btn-primary">
-                  Commencer gratuitement →
+                  {t.home.ctaPrimary}
                 </Link>
                 <Link href="/rental" className="lp-btn-ghost">
-                  Voir le catalogue
+                  {t.home.ctaSecondary}
                 </Link>
               </div>
 
               <div style={{ display: 'flex', gap: '16px' }}>
                 <Link href="/signup?role=BDE" className="role-pill">
-                  <span className="dot" /> Je suis un BDE
+                  <span className="dot" /> {t.home.iAmBDE}
                 </Link>
                 <Link href="/signup?role=ORGA" className="role-pill">
-                  <span className="dot" style={{ background: '#7C3AED' }} /> Je suis Orga
+                  <span className="dot" style={{ background: '#7C3AED' }} /> {t.home.iAmOrga}
                 </Link>
               </div>
             </div>
           </div>
 
-          {/* Scroll indicator */}
           <div className="scroll-indicator" style={{ paddingBottom: '32px', alignSelf: 'center' }}>
             <div className="scroll-line" />
             <span>Scroll</span>
@@ -461,7 +456,7 @@ export default function Home() {
           background: '#050505',
         }}>
           <div className="ticker-track">
-            {TICKER_ITEMS.map((item, i) => (
+            {tickerItems.map((item, i) => (
               <span key={i} style={{
                 fontSize: '11px',
                 letterSpacing: '0.15em',
@@ -480,28 +475,27 @@ export default function Home() {
         <section style={{ padding: '100px 40px', maxWidth: '900px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '60px' }}>
             <div>
-              <div className="section-label" style={{ marginBottom: '12px' }}>Ce qu'on fait</div>
+              <div className="section-label" style={{ marginBottom: '12px' }}>{t.home.whatWeDo}</div>
               <h2 style={{ fontSize: 'clamp(32px, 5vw, 52px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1 }}>
-                Tout ce dont vous<br />avez besoin.
+                {t.home.everythingYouNeed.split('\n').map((line, i) => (
+                  <span key={i}>{line}{i < t.home.everythingYouNeed.split('\n').length - 1 && <br />}</span>
+                ))}
               </h2>
             </div>
             <div style={{ fontSize: '11px', color: '#E8E8E8', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              03 fonctionnalités
+              {t.home.features}
             </div>
           </div>
 
           <div style={{ borderTop: '1px solid #111' }}>
-            {FEATURES.map((f, i) => (
+            {t.home.features_list.map((f) => (
               <div key={f.num} className="feature-row">
-                {/* Number */}
                 <div style={{
                   fontSize: '11px', letterSpacing: '0.1em',
                   color: '#E8E8E8', paddingTop: '4px', fontWeight: 700
                 }}>
                   {f.num}
                 </div>
-
-                {/* Content */}
                 <div>
                   <h3 style={{ fontSize: '20px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '10px' }}>
                     {f.title}
@@ -510,8 +504,6 @@ export default function Home() {
                     {f.desc}
                   </p>
                 </div>
-
-                {/* Tag */}
                 <div style={{
                   fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase',
                   color: '#E8E8E8', border: '1px solid #333', padding: '4px 10px',
@@ -536,11 +528,7 @@ export default function Home() {
             maxWidth: '900px', margin: '0 auto',
             display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
           }}>
-            {[
-              { val: '200+', label: 'BDE inscrits', sub: 'dans toute la France' },
-              { val: '1.2k', label: 'Prestataires', sub: 'vérifiés et notés' },
-              { val: '4.8', label: 'Note moyenne', sub: 'sur l\'ensemble des projets' },
-            ].map((s) => (
+            {[t.home.stats.bde, t.home.stats.providers, t.home.stats.rating].map((s) => (
               <div key={s.label} className="stat-block" style={{ padding: '48px 40px' }}>
                 <div style={{
                   fontSize: 'clamp(40px, 5vw, 64px)',
@@ -564,7 +552,7 @@ export default function Home() {
         <section className="cta-section" style={{ padding: '120px 40px', textAlign: 'center', position: 'relative', zIndex: 2 }}>
           <div style={{ maxWidth: '600px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
             <div className="section-label" style={{ justifyContent: 'center', marginBottom: '24px' }}>
-              Rejoindre KLUB
+              {t.home.joinKlub}
             </div>
             <h2 style={{
               fontSize: 'clamp(40px, 7vw, 80px)',
@@ -573,19 +561,22 @@ export default function Home() {
               lineHeight: 0.95,
               marginBottom: '32px',
             }}>
-              Votre prochain<br />
-              événement<br />
-              <span style={{ color: '#7C3AED' }}>commence ici.</span>
+              {t.home.nextEventStartsHere.split('\n').map((line, i, arr) => (
+                <span key={i}>
+                  {i === arr.length - 1 ? <span style={{ color: '#7C3AED' }}>{line}</span> : line}
+                  {i < arr.length - 1 && <br />}
+                </span>
+              ))}
             </h2>
             <p style={{ fontSize: '15px', color: '#E8E8E8', marginBottom: '40px', lineHeight: 1.6 }}>
-              Inscription gratuite. Accès complet dès le premier jour.
+              {t.home.freeSignup}
             </p>
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <Link href="/signup?role=BDE" className="lp-btn-primary">
-                Je suis un BDE →
+                {t.home.iAmBDE} →
               </Link>
               <Link href="/signup?role=ORGA" className="lp-btn-ghost">
-                Je suis Orga →
+                {t.home.iAmOrga} →
               </Link>
             </div>
           </div>
@@ -606,10 +597,10 @@ export default function Home() {
             KL<span style={{ color: '#7C3AED' }}>U</span>B
           </span>
           <div style={{ display: 'flex', gap: '24px' }}>
-            <Link href="/login" className="nav-link">Connexion</Link>
-            <Link href="/signup" className="nav-link">Inscription</Link>
-            <Link href="/rental" className="nav-link">Matériel</Link>
-            <Link href="/projects" className="nav-link">Projets</Link>
+            <Link href="/login" className="nav-link">{t.nav.login}</Link>
+            <Link href="/signup" className="nav-link">{t.nav.signup}</Link>
+            <Link href="/rental" className="nav-link">{t.nav.equipment}</Link>
+            <Link href="/projects" className="nav-link">{t.nav.projects}</Link>
           </div>
           <span style={{ fontSize: '11px', color: '#E8E8E8', letterSpacing: '0.08em' }}>
             © 2026 KLUB

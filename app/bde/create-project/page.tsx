@@ -7,11 +7,13 @@ import { createClient } from '@/lib/supabase/client';
 import { createProject, hasPendingFeedback } from '@/lib/utils/projects';
 import { getProfile } from '@/lib/utils/profiles';
 import { useToast } from '@/lib/hooks/useToast';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 export default function CreateProjectPage() {
   const router = useRouter();
   const supabase = createClient();
   const { toast, ToastContainer } = useToast();
+  const { t } = useLanguage();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -105,14 +107,14 @@ export default function CreateProjectPage() {
       <div className="max-w-7xl mx-auto">
 
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Créer un Projet</h1>
-          <p className="text-[#A0A0A0]">Postez votre événement et trouvez les meilleurs prestataires</p>
+          <h1 className="text-4xl font-bold mb-2">{t.projects.create.title}</h1>
+          <p className="text-[#A0A0A0]">{t.projects.create.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Titre */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Titre du projet *</label>
+            <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.title} *</label>
             <input
               type="text"
               value={formData.title}
@@ -126,7 +128,7 @@ export default function CreateProjectPage() {
           {/* Type et Budget */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Type d&apos;événement *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.type} *</label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -139,7 +141,7 @@ export default function CreateProjectPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Budget estimé (€) *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.budget} *</label>
               <input
                 type="number"
                 value={formData.budget}
@@ -155,7 +157,7 @@ export default function CreateProjectPage() {
           {/* Capacité et Lieu */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Capacité attendue *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.capacity} *</label>
               <input
                 type="number"
                 value={formData.capacity}
@@ -168,7 +170,7 @@ export default function CreateProjectPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Lieu *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.location} *</label>
               <input
                 type="text"
                 value={formData.location}
@@ -183,7 +185,7 @@ export default function CreateProjectPage() {
           {/* Dates */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Date de début *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.startDate} *</label>
               <input
                 type="date"
                 value={formData.start_date}
@@ -194,7 +196,7 @@ export default function CreateProjectPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Date de fin *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.endDate} *</label>
               <input
                 type="date"
                 value={formData.end_date}
@@ -207,7 +209,7 @@ export default function CreateProjectPage() {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Description *</label>
+            <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.description} *</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -224,13 +226,13 @@ export default function CreateProjectPage() {
               disabled={submitting}
               className="brutalist-button-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Création en cours...' : 'Publier le projet'}
+              {submitting ? t.projects.create.publishing : t.projects.create.submit}
             </button>
             <Link
               href="/bde/dashboard"
               className="brutalist-button px-8 py-3 inline-block"
             >
-              Annuler
+              {t.projects.create.cancel}
             </Link>
           </div>
         </form>
