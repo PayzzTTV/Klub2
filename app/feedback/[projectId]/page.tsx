@@ -9,6 +9,7 @@ import { getProjectById } from '@/lib/utils/projects';
 import { createReview, canReview } from '@/lib/utils/reviews';
 import type { Project } from '@/types';
 import { useToast } from '@/lib/hooks/useToast';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 export default function DemoFeedbackPage() {
   const router = useRouter();

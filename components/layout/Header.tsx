@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 type UserProfile = {
   id: string;
@@ -19,6 +20,7 @@ export default function Header() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
   const router = useRouter();
+  const { lang, setLang, t } = useLanguage();
 
   const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/signup') || pathname === '/';
 
@@ -44,7 +46,6 @@ export default function Header() {
     loadUser();
   }, [isAuthPage]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -56,8 +57,6 @@ export default function Header() {
   }, []);
 
   const handleLogout = async () => {
-    localStorage.removeItem('dev_authenticated');
-    localStorage.removeItem('dev_user');
     if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
       const supabase = createClient();
       await supabase.auth.signOut();
@@ -68,13 +67,13 @@ export default function Header() {
   if (isAuthPage || !user) return null;
 
   const navigation = user.role === 'BDE' ? [
-    { name: 'Dashboard', href: '/bde/dashboard' },
-    { name: 'Mes Projets', href: '/bde/projects' },
-    { name: 'Location', href: '/rental' },
+    { name: t.nav.dashboard, href: '/bde/dashboard' },
+    { name: t.nav.myProjects, href: '/bde/projects' },
+    { name: t.nav.rental, href: '/rental' },
   ] : [
-    { name: 'Dashboard', href: '/orga/dashboard' },
-    { name: 'Projets', href: '/projects' },
-    { name: 'Location', href: '/rental' },
+    { name: t.nav.dashboard, href: '/orga/dashboard' },
+    { name: t.nav.projects, href: '/projects' },
+    { name: t.nav.rental, href: '/rental' },
   ];
 
   const userInitial = user.name.charAt(0).toUpperCase();
@@ -137,7 +136,7 @@ export default function Header() {
             const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
             return (
               <Link
-                key={item.name}
+                key={item.href}
                 href={item.href}
                 style={{
                   textDecoration: 'none',
@@ -165,158 +164,193 @@ export default function Header() {
           })}
         </nav>
 
-        {/* Right: Role badge + avatar + dropdown */}
-        <div ref={dropdownRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Role badge */}
-          <span
+        {/* Right: Lang toggle + Role badge + avatar + dropdown */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+
+          {/* Language toggle */}
+          <button
+            onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
             style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'none',
+              border: '1px solid #1A1A1A',
+              cursor: 'pointer',
+              padding: '3px 8px',
               fontSize: '9px',
               fontWeight: 700,
               letterSpacing: '0.12em',
               textTransform: 'uppercase',
-              padding: '3px 8px',
-              border: `1px solid ${user.role === 'BDE' ? '#7C3AED' : '#00FF66'}`,
-              color: user.role === 'BDE' ? '#7C3AED' : '#00FF66',
-              background: 'transparent',
-              lineHeight: 1.4,
+              color: '#555555',
+              fontFamily: 'inherit',
+              transition: 'border-color 0.15s ease, color 0.15s ease',
             }}
-          >
-            {user.role}
-          </span>
-
-          {/* Avatar + dropdown toggle */}
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0',
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#7C3AED';
+              (e.currentTarget as HTMLButtonElement).style.color = '#7C3AED';
             }}
-            aria-label="Menu utilisateur"
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = '#1A1A1A';
+              (e.currentTarget as HTMLButtonElement).style.color = '#555555';
+            }}
+            title={lang === 'fr' ? 'Switch to English' : 'Passer en français'}
           >
-            {/* Avatar circle */}
-            <div
-              style={{
-                width: '28px',
-                height: '28px',
-                borderRadius: '50%',
-                background: '#7C3AED',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '12px',
-                fontWeight: 700,
-                color: '#FFFFFF',
-                flexShrink: 0,
-              }}
-            >
-              {userInitial}
-            </div>
-
-            {/* Chevron */}
-            <svg
-              width="12"
-              height="12"
-              viewBox="0 0 12 12"
-              fill="none"
-              style={{
-                color: '#555555',
-                transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.15s ease',
-              }}
-            >
-              <path
-                d="M2 4L6 8L10 4"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            <span style={{ color: lang === 'fr' ? '#FFFFFF' : '#555555', transition: 'color 0.15s' }}>FR</span>
+            <span style={{ color: '#333' }}>/</span>
+            <span style={{ color: lang === 'en' ? '#FFFFFF' : '#555555', transition: 'color 0.15s' }}>EN</span>
           </button>
 
-          {/* Dropdown panel */}
-          {isMenuOpen && (
-            <div
+          {/* Role badge + avatar dropdown */}
+          <div ref={dropdownRef} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Role badge */}
+            <span
               style={{
-                position: 'absolute',
-                top: 'calc(100% + 10px)',
-                right: 0,
-                minWidth: '180px',
-                background: '#050505',
-                border: '1px solid #111',
-                overflow: 'hidden',
-                zIndex: 100,
+                fontSize: '9px',
+                fontWeight: 700,
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                padding: '3px 8px',
+                border: `1px solid ${user.role === 'BDE' ? '#7C3AED' : '#00FF66'}`,
+                color: user.role === 'BDE' ? '#7C3AED' : '#00FF66',
+                background: 'transparent',
+                lineHeight: 1.4,
               }}
             >
-              <Link
-                href="/profile"
-                onClick={() => setIsMenuOpen(false)}
+              {user.role}
+            </span>
+
+            {/* Avatar + dropdown toggle */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0',
+              }}
+              aria-label="User menu"
+            >
+              <div
                 style={{
-                  display: 'block',
-                  padding: '11px 16px',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  letterSpacing: '0.04em',
-                  color: '#E8E8E8',
-                  textDecoration: 'none',
-                  borderBottom: '1px solid #111',
-                  transition: 'background 0.1s ease',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  background: '#7C3AED',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  color: '#FFFFFF',
+                  flexShrink: 0,
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#0D0D0D'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
               >
-                Mon Profil
-              </Link>
-              <Link
-                href="/settings"
-                onClick={() => setIsMenuOpen(false)}
+                {userInitial}
+              </div>
+
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
                 style={{
-                  display: 'block',
-                  padding: '11px 16px',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  letterSpacing: '0.04em',
-                  color: '#E8E8E8',
-                  textDecoration: 'none',
-                  borderBottom: '1px solid #111',
-                  transition: 'background 0.1s ease',
+                  color: '#555555',
+                  transform: isMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.15s ease',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#0D0D0D'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
               >
-                Parametres
-              </Link>
-              {/* Separator */}
-              <div style={{ height: '1px', background: '#111', margin: '0' }} />
-              <button
-                onClick={handleLogout}
+                <path
+                  d="M2 4L6 8L10 4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {/* Dropdown panel */}
+            {isMenuOpen && (
+              <div
                 style={{
-                  display: 'block',
-                  width: '100%',
-                  textAlign: 'left',
-                  padding: '11px 16px',
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  letterSpacing: '0.04em',
-                  color: '#FF0055',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  transition: 'background 0.1s ease',
-                  fontFamily: 'inherit',
+                  position: 'absolute',
+                  top: 'calc(100% + 10px)',
+                  right: 0,
+                  minWidth: '180px',
+                  background: '#050505',
+                  border: '1px solid #111',
+                  overflow: 'hidden',
+                  zIndex: 100,
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,0,85,0.08)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
               >
-                Deconnexion
-              </button>
-            </div>
-          )}
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  style={{
+                    display: 'block',
+                    padding: '11px 16px',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    letterSpacing: '0.04em',
+                    color: '#E8E8E8',
+                    textDecoration: 'none',
+                    borderBottom: '1px solid #111',
+                    transition: 'background 0.1s ease',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#0D0D0D'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                >
+                  {t.nav.profile}
+                </Link>
+                <Link
+                  href="/settings"
+                  onClick={() => setIsMenuOpen(false)}
+                  style={{
+                    display: 'block',
+                    padding: '11px 16px',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    letterSpacing: '0.04em',
+                    color: '#E8E8E8',
+                    textDecoration: 'none',
+                    borderBottom: '1px solid #111',
+                    transition: 'background 0.1s ease',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = '#0D0D0D'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.background = 'transparent'; }}
+                >
+                  {t.nav.settings}
+                </Link>
+                <div style={{ height: '1px', background: '#111', margin: '0' }} />
+                <button
+                  onClick={handleLogout}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '11px 16px',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    letterSpacing: '0.04em',
+                    color: '#FF0055',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'background 0.1s ease',
+                    fontFamily: 'inherit',
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,0,85,0.08)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
+                >
+                  {t.nav.logout}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

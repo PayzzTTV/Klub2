@@ -40,7 +40,8 @@
       "Bash(python3 setup-secrets.py:*)",
       "Bash(grep -v \"^$\")",
       "Bash(git reset:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "mcp__Claude_Preview__preview_start"
     ],
     "additionalDirectories": [
       "c:\\projet\\Klub\\app\\demo\\projects\\[id]\\applications",

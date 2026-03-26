@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Syne } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/layout/Header";
+import { LanguageProvider } from "@/lib/hooks/useLanguage";
 
 const syne = Syne({
   subsets: ["latin"],
@@ -46,8 +47,10 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <body className={`${syne.variable} antialiased min-h-screen`}>
-        <Header />
-        {children}
+        <LanguageProvider>
+          <Header />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

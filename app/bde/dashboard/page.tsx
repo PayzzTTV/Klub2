@@ -9,6 +9,7 @@ import { getProfile } from '@/lib/utils/profiles';
 import { Profile, Project } from '@/types';
 import { usePendingFeedback } from '@/lib/hooks/usePendingFeedback';
 import FeedbackBanner from '@/components/feedback/FeedbackBanner';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 export default function DemoBDEDashboard() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export default function DemoBDEDashboard() {
 
   // Use the pending feedback hook
   const { pendingProjects, loading: feedbackLoading } = usePendingFeedback(supabase, userId);
+  const { t } = useLanguage();
 
   useEffect(() => {
     async function loadDashboard() {
@@ -64,10 +66,10 @@ export default function DemoBDEDashboard() {
   const hasPendingFeedback = pendingProjects.length > 0;
 
   function statusBadge(status: string) {
-    if (status === 'published') return <span className="k-badge k-badge-violet">Publie</span>;
-    if (status === 'in_progress') return <span className="k-badge k-badge-green">En cours</span>;
-    if (status === 'completed') return <span className="k-badge k-badge-white">Termine</span>;
-    if (status === 'cancelled') return <span className="k-badge k-badge-red">Annule</span>;
+    if (status === 'published') return <span className="k-badge k-badge-violet">{t.projects.status.published}</span>;
+    if (status === 'in_progress') return <span className="k-badge k-badge-green">{t.projects.status.in_progress}</span>;
+    if (status === 'completed') return <span className="k-badge k-badge-white">{t.projects.status.completed}</span>;
+    if (status === 'cancelled') return <span className="k-badge k-badge-red">{t.projects.status.cancelled}</span>;
     return <span className="k-badge">{status}</span>;
   }
 
@@ -92,9 +94,9 @@ export default function DemoBDEDashboard() {
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: '#1A1A1A', border: '1px solid #1A1A1A', marginBottom: '40px' }}>
           {[
-            { label: 'Projets créés', value: totalProjects, color: '#7C3AED' },
-            { label: 'En cours', value: activeProjects, color: '#00FF66' },
-            { label: 'Terminés', value: completedProjects, color: '#F0F0F0' },
+            { label: t.bde.dashboard.stats.created, value: totalProjects, color: '#7C3AED' },
+            { label: t.bde.dashboard.stats.active, value: activeProjects, color: '#00FF66' },
+            { label: t.bde.dashboard.stats.completed, value: completedProjects, color: '#F0F0F0' },
           ].map((stat) => (
             <div key={stat.label} style={{ background: '#000', padding: '24px 28px' }}>
               <p className="k-section-label mb-4" style={{ whiteSpace: 'nowrap' }}>{stat.label}</p>
@@ -107,14 +109,14 @@ export default function DemoBDEDashboard() {
 
         {/* Quick actions */}
         <div style={{ marginBottom: '40px' }}>
-          <p className="k-section-label mb-4">Actions rapides</p>
+          <p className="k-section-label mb-4">{t.bde.dashboard.quickActions}</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: '#1A1A1A', border: '1px solid #1A1A1A' }}>
             {hasPendingFeedback ? (
               <div style={{ background: '#000', padding: '24px', opacity: 0.35, cursor: 'not-allowed' }}>
-                <p className="k-section-label mb-4">01</p>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Créer un projet</h3>
-                <p style={{ fontSize: '12px', color: '#555', marginBottom: '12px' }}>Postez un événement et trouvez des prestataires</p>
-                <p style={{ fontSize: '10px', color: '#FF0055', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Feedback requis</p>
+                <p className="k-section-label mb-4">{t.bde.dashboard.actions.createProject.num}</p>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>{t.bde.dashboard.actions.createProject.title}</h3>
+                <p style={{ fontSize: '12px', color: '#555', marginBottom: '12px' }}>{t.bde.dashboard.actions.createProject.desc}</p>
+                <p style={{ fontSize: '10px', color: '#FF0055', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{t.bde.dashboard.actions.createProject.blocked}</p>
               </div>
             ) : (
               <Link
@@ -123,9 +125,9 @@ export default function DemoBDEDashboard() {
                 onMouseEnter={e => (e.currentTarget.style.background = '#0A0A0A')}
                 onMouseLeave={e => (e.currentTarget.style.background = '#000')}
               >
-                <p className="k-section-label mb-4">01</p>
-                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Créer un projet</h3>
-                <p style={{ fontSize: '12px', color: '#555' }}>Postez un événement et trouvez des prestataires</p>
+                <p className="k-section-label mb-4">{t.bde.dashboard.actions.createProject.num}</p>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>{t.bde.dashboard.actions.createProject.title}</h3>
+                <p style={{ fontSize: '12px', color: '#555' }}>{t.bde.dashboard.actions.createProject.desc}</p>
               </Link>
             )}
 
@@ -135,9 +137,9 @@ export default function DemoBDEDashboard() {
               onMouseEnter={e => (e.currentTarget.style.background = '#0A0A0A')}
               onMouseLeave={e => (e.currentTarget.style.background = '#000')}
             >
-              <p className="k-section-label mb-4">02</p>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Gérer les locations</h3>
-              <p style={{ fontSize: '12px', color: '#555' }}>Approuvez ou refusez les demandes de location</p>
+              <p className="k-section-label mb-4">{t.bde.dashboard.actions.manageRentals.num}</p>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>{t.bde.dashboard.actions.manageRentals.title}</h3>
+              <p style={{ fontSize: '12px', color: '#555' }}>{t.bde.dashboard.actions.manageRentals.desc}</p>
             </Link>
 
             <Link
@@ -146,9 +148,9 @@ export default function DemoBDEDashboard() {
               onMouseEnter={e => (e.currentTarget.style.background = '#0A0A0A')}
               onMouseLeave={e => (e.currentTarget.style.background = '#000')}
             >
-              <p className="k-section-label mb-4">03</p>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>Louer du matériel</h3>
-              <p style={{ fontSize: '12px', color: '#555' }}>Parcourez le catalogue disponible</p>
+              <p className="k-section-label mb-4">{t.bde.dashboard.actions.browseEquipment.num}</p>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#F0F0F0', marginBottom: '8px' }}>{t.bde.dashboard.actions.browseEquipment.title}</h3>
+              <p style={{ fontSize: '12px', color: '#555' }}>{t.bde.dashboard.actions.browseEquipment.desc}</p>
             </Link>
           </div>
         </div>
@@ -156,23 +158,23 @@ export default function DemoBDEDashboard() {
         {/* Projects list */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <p className="k-section-label">Projets récents</p>
+            <p className="k-section-label">{t.bde.dashboard.recentProjects}</p>
             {projects.length > 0 && (
               <Link href="/bde/projects" style={{ fontSize: '10px', color: '#7C3AED', letterSpacing: '0.1em', textTransform: 'uppercase', textDecoration: 'none', fontWeight: 600 }}>
-                Voir tout →
+                {t.bde.dashboard.viewAll}
               </Link>
             )}
           </div>
 
           {projects.length === 0 ? (
             <div style={{ border: '1px solid #1A1A1A', padding: '48px 24px', textAlign: 'center' }}>
-              <p style={{ fontSize: '13px', color: '#333', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>Aucun projet</p>
+              <p style={{ fontSize: '13px', color: '#333', marginBottom: '6px', letterSpacing: '0.05em', textTransform: 'uppercase', fontWeight: 600 }}>{t.bde.dashboard.noProjects}</p>
               <p style={{ fontSize: '13px', color: '#555', marginBottom: '24px' }}>
-                Créez votre premier projet pour collaborer avec des prestataires
+                {t.bde.dashboard.noProjectsDesc}
               </p>
               {!hasPendingFeedback && (
                 <Link href="/bde/create-project" className="k-btn">
-                  Créer un projet
+                  {t.bde.dashboard.createProject}
                 </Link>
               )}
             </div>

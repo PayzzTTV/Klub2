@@ -4,16 +4,19 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { createProject } from '@/lib/utils/projects';
+import { createProject, hasPendingFeedback } from '@/lib/utils/projects';
+import { getProfile } from '@/lib/utils/profiles';
 import { useToast } from '@/lib/hooks/useToast';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
-export default function DemoCreateProjectPage() {
+export default function CreateProjectPage() {
   const router = useRouter();
   const supabase = createClient();
   const { toast, ToastContainer } = useToast();
+  const { t } = useLanguage();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [isDemo, setIsDemo] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -28,16 +31,22 @@ export default function DemoCreateProjectPage() {
 
   const projectTypes = ['Gala', 'Soirée', 'Festival', 'Conférence', 'Autre'];
 
-  // Check authentication
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-        setIsDemo(false);
-      } else {
-        setIsDemo(true);
+      if (!user) {
+        router.push('/login');
+        return;
       }
+
+      const profile = await getProfile(supabase, user.id);
+      if (!profile || profile.role !== 'BDE') {
+        router.push('/login');
+        return;
+      }
+
+      setCurrentUserId(user.id);
+      setLoading(false);
     }
     checkAuth();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,55 +56,65 @@ export default function DemoCreateProjectPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    if (!isDemo && currentUserId) {
-      // Production mode: Save to Supabase
-      console.log('Form data before parsing:', formData);
-
-      const projectData = {
-        title: formData.title,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        type: formData.type as any,
-        budget: parseFloat(formData.budget),
-        capacity: parseInt(formData.capacity),
-        location: formData.location,
-        description: formData.description,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-      };
-
-      console.log('Parsed project data:', projectData);
-      console.log('Budget:', projectData.budget, 'Capacity:', projectData.capacity);
-
-      const newProject = await createProject(supabase, currentUserId, projectData);
-
-      if (newProject) {
-        toast.success('Projet créé avec succès !');
-        router.push(`/projects/${newProject.id}`);
-      } else {
-        toast.error('Erreur lors de la création du projet. Vérifiez vos permissions.');
-        setSubmitting(false);
-      }
-    } else {
-      // Demo mode: Just show toast
-      toast.info('Mode Démo : Le projet a été créé avec succès !');
+    if (!currentUserId) {
+      toast.error('Vous devez être connecté pour créer un projet.');
       setSubmitting(false);
-      router.push('/bde/dashboard');
+      return;
+    }
+
+    // Vérifier les feedbacks en attente (bloque la RLS si non donné)
+    const pendingFeedback = await hasPendingFeedback(supabase, currentUserId);
+    if (pendingFeedback) {
+      toast.error('Vous devez donner votre feedback sur vos projets terminés avant de créer un nouveau projet.');
+      setSubmitting(false);
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const projectData = {
+      title: formData.title,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      type: formData.type as any,
+      budget: parseFloat(formData.budget),
+      capacity: parseInt(formData.capacity),
+      location: formData.location,
+      description: formData.description,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
+    };
+
+    const newProject = await createProject(supabase, currentUserId, projectData);
+
+    if (newProject) {
+      toast.success('Projet créé avec succès !');
+      router.push(`/projects/${newProject.id}`);
+    } else {
+      toast.error('Erreur lors de la création du projet. Veuillez réessayer.');
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#000000]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-purple-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#000000] py-12 px-4">
       <div className="max-w-7xl mx-auto">
-      
+
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Créer un Projet</h1>
-          <p className="text-[#A0A0A0]">Postez votre événement et trouvez les meilleurs prestataires</p>
+          <h1 className="text-4xl font-bold mb-2">{t.projects.create.title}</h1>
+          <p className="text-[#A0A0A0]">{t.projects.create.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Titre */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Titre du projet *</label>
+            <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.title} *</label>
             <input
               type="text"
               value={formData.title}
@@ -109,7 +128,7 @@ export default function DemoCreateProjectPage() {
           {/* Type et Budget */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Type d&apos;événement *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.type} *</label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -122,7 +141,7 @@ export default function DemoCreateProjectPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Budget estimé (€) *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.budget} *</label>
               <input
                 type="number"
                 value={formData.budget}
@@ -138,7 +157,7 @@ export default function DemoCreateProjectPage() {
           {/* Capacité et Lieu */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Capacité attendue *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.capacity} *</label>
               <input
                 type="number"
                 value={formData.capacity}
@@ -151,7 +170,7 @@ export default function DemoCreateProjectPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Lieu *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.location} *</label>
               <input
                 type="text"
                 value={formData.location}
@@ -166,7 +185,7 @@ export default function DemoCreateProjectPage() {
           {/* Dates */}
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <label className="block text-sm font-semibold mb-2">Date de début *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.startDate} *</label>
               <input
                 type="date"
                 value={formData.start_date}
@@ -177,7 +196,7 @@ export default function DemoCreateProjectPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-semibold mb-2">Date de fin *</label>
+              <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.endDate} *</label>
               <input
                 type="date"
                 value={formData.end_date}
@@ -190,7 +209,7 @@ export default function DemoCreateProjectPage() {
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-semibold mb-2">Description *</label>
+            <label className="block text-sm font-semibold mb-2">{t.projects.create.fields.description} *</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -207,13 +226,13 @@ export default function DemoCreateProjectPage() {
               disabled={submitting}
               className="brutalist-button-primary px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Création en cours...' : 'Publier le projet'}
+              {submitting ? t.projects.create.publishing : t.projects.create.submit}
             </button>
             <Link
               href="/bde/dashboard"
               className="brutalist-button px-8 py-3 inline-block"
             >
-              Annuler
+              {t.projects.create.cancel}
             </Link>
           </div>
         </form>

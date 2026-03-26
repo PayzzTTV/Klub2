@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { UserRole } from '@/types';
 import { Syne } from 'next/font/google';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 const syne = Syne({ subsets: ['latin'], weight: ['400', '700', '800'] });
 
@@ -19,7 +20,8 @@ export default function SignupPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const isDevMode = process.env.NEXT_PUBLIC_DEV_MODE === 'true';
+  const supabase = createClient();
+  const { t, lang, setLang } = useLanguage();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,22 +29,6 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
-      if (isDevMode) {
-        await new Promise(resolve => setTimeout(resolve, 800));
-        const mockUser = {
-          id: `dev-user-${Date.now()}`,
-          email, name,
-          organization_name: organizationName,
-          role, location,
-          created_at: new Date().toISOString(),
-        };
-        localStorage.setItem('dev_user', JSON.stringify(mockUser));
-        localStorage.setItem('dev_authenticated', 'true');
-        router.push(role === 'BDE' ? '/bde/dashboard' : '/projects');
-        return;
-      }
-
-      const supabase = createClient();
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -54,7 +40,7 @@ export default function SignupPage() {
 
       if (authError) {
         if (authError.message.includes('email rate limit')) {
-          throw new Error('Limite d\'emails atteinte. Active le MODE DEV ou attends 20 minutes.');
+          throw new Error('Limite d\'emails atteinte. Veuillez patienter 20 minutes avant de réessayer.');
         }
         throw authError;
       }
@@ -70,20 +56,7 @@ export default function SignupPage() {
     }
   };
 
-  const roleInfo = {
-    BDE: {
-      label: 'BDE',
-      sub: 'Bureau des Étudiants',
-      desc: 'Postez vos événements, recrutez des prestataires, gérez vos locations de matériel.',
-      perks: ['Poster des projets', 'Louer du matériel', 'Noter les prestataires'],
-    },
-    ORGA: {
-      label: 'ORGA',
-      sub: 'Organisateur',
-      desc: 'Proposez vos services aux BDE, louez votre matériel, développez votre réputation.',
-      perks: ['Répondre aux projets', 'Louer votre matériel', 'Score de réputation'],
-    },
-  };
+  const roleInfo = t.auth.signup.roleInfo;
 
   return (
     <>
@@ -254,7 +227,7 @@ export default function SignupPage() {
               fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase',
               color: '#555', marginBottom: '12px'
             }}>
-              — Vous rejoignez en tant que
+              {t.auth.signup.joinAs}
             </div>
             <div style={{
               fontSize: 'clamp(32px, 4vw, 52px)', fontWeight: 800,
@@ -289,7 +262,7 @@ export default function SignupPage() {
               ))}
             </div>
             <p style={{ fontSize: '10px', color: '#555', marginTop: '8px', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-              Étape 1 sur 1
+              {t.auth.signup.step}
             </p>
           </div>
         </div>
@@ -310,20 +283,11 @@ export default function SignupPage() {
             {/* Heading */}
             <div className="fu1" style={{ marginBottom: '32px' }}>
               <h2 style={{ fontSize: '26px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '4px' }}>
-                Créer un compte
+                {t.auth.signup.title}
               </h2>
               <p style={{ fontSize: '13px', color: '#555' }}>
-                Rejoignez la communauté KLUB
+                {t.auth.signup.subtitle}
               </p>
-              {isDevMode && (
-                <span style={{
-                  display: 'inline-block', marginTop: '8px',
-                  fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase',
-                  color: '#00FF66', border: '1px solid #00FF66', padding: '2px 8px'
-                }}>
-                  MODE DEV
-                </span>
-              )}
             </div>
 
             {/* Error */}
@@ -341,7 +305,7 @@ export default function SignupPage() {
 
               {/* Role selector */}
               <div className="fu2">
-                <div className="s-label" style={{ marginBottom: '10px' }}>Type de compte</div>
+                <div className="s-label" style={{ marginBottom: '10px' }}>{t.auth.signup.accountType}</div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   {(['BDE', 'ORGA'] as UserRole[]).map(r => (
                     <button
@@ -365,7 +329,7 @@ export default function SignupPage() {
               {/* Name + Org */}
               <div className="fu3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div className="s-field">
-                  <label className="s-label" htmlFor="name">Nom complet</label>
+                  <label className="s-label" htmlFor="name">{t.auth.signup.fullName}</label>
                   <input
                     id="name" type="text" value={name}
                     onChange={e => setName(e.target.value)}
@@ -373,7 +337,7 @@ export default function SignupPage() {
                   />
                 </div>
                 <div className="s-field">
-                  <label className="s-label" htmlFor="organization">Organisation</label>
+                  <label className="s-label" htmlFor="organization">{t.auth.signup.organization}</label>
                   <input
                     id="organization" type="text" value={organizationName}
                     onChange={e => setOrganizationName(e.target.value)}
@@ -386,28 +350,28 @@ export default function SignupPage() {
 
               {/* Location */}
               <div className="s-field fu4">
-                <label className="s-label" htmlFor="location">Localisation</label>
+                <label className="s-label" htmlFor="location">{t.auth.signup.location}</label>
                 <input
                   id="location" type="text" value={location}
                   onChange={e => setLocation(e.target.value)}
-                  className="s-input" placeholder="Paris, France" required
+                  className="s-input" placeholder={t.auth.signup.locationPlaceholder} required
                 />
               </div>
 
               {/* Email */}
               <div className="s-field fu4">
-                <label className="s-label" htmlFor="email">Email</label>
+                <label className="s-label" htmlFor="email">{t.auth.signup.email}</label>
                 <input
                   id="email" type="email" value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className="s-input" placeholder="votre@email.fr"
+                  className="s-input" placeholder={t.auth.signup.emailPlaceholder}
                   required autoComplete="email"
                 />
               </div>
 
               {/* Password */}
               <div className="s-field fu5">
-                <label className="s-label" htmlFor="password">Mot de passe</label>
+                <label className="s-label" htmlFor="password">{t.auth.signup.password}</label>
                 <input
                   id="password" type="password" value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -415,7 +379,7 @@ export default function SignupPage() {
                   required minLength={6} autoComplete="new-password"
                 />
                 <div style={{ fontSize: '10px', color: '#333', marginTop: '4px', letterSpacing: '0.05em' }}>
-                  Minimum 6 caractères
+                  {t.auth.signup.passwordHint}
                 </div>
               </div>
 
@@ -429,26 +393,39 @@ export default function SignupPage() {
                         border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff',
                         display: 'inline-block', animation: 'spin 0.6s linear infinite',
                       }} />
-                      Création...
+                      {t.auth.signup.submitting}
                     </span>
-                  ) : `Rejoindre en tant que ${role} →`}
+                  ) : t.auth.signup.submit.replace('{role}', role)}
                 </button>
               </div>
             </form>
 
             {/* Footer */}
             <div className="fu6" style={{ marginTop: '28px', paddingTop: '20px', borderTop: '1px solid #111' }}>
-              <p style={{ fontSize: '13px', color: '#555', textAlign: 'center' }}>
-                Déjà un compte ?{' '}
+              <p style={{ fontSize: '13px', color: '#555', textAlign: 'center', marginBottom: '12px' }}>
+                {t.auth.signup.alreadyAccount}{' '}
                 <Link
                   href="/login"
                   style={{ color: '#7C3AED', fontWeight: 700, textDecoration: 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={e => (e.currentTarget.style.textDecoration = 'none')}
                 >
-                  Se connecter
+                  {t.auth.signup.login}
                 </Link>
               </p>
+              {/* Language toggle */}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button
+                  onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+                  style={{ padding: '6px 14px', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', background: 'transparent', border: '1px solid #1A1A1A', color: '#444', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s, color 0.2s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#7C3AED'; (e.currentTarget as HTMLButtonElement).style.color = '#7C3AED'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#1A1A1A'; (e.currentTarget as HTMLButtonElement).style.color = '#444'; }}
+                >
+                  <span style={{ color: lang === 'fr' ? '#fff' : '#555' }}>FR</span>
+                  {' / '}
+                  <span style={{ color: lang === 'en' ? '#fff' : '#555' }}>EN</span>
+                </button>
+              </div>
             </div>
 
           </div>
