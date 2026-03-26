@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getPublishedProjects, ProjectWithProfile } from '@/lib/utils/projects';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 export default function DemoProjectsPage() {
   const router = useRouter();
