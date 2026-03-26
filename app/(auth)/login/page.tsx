@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Syne } from 'next/font/google';
+import { useLanguage } from '@/lib/hooks/useLanguage';
 
 const syne = Syne({ subsets: ['latin'], weight: ['400', '700', '800'] });
 
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const router = useRouter();
+  const { t, lang, setLang } = useLanguage();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +26,7 @@ export default function LoginPage() {
     try {
       const supabase = createClient();
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) throw new Error(t.common.error);
 
       if (data.user) {
         const { data: profile } = await supabase
@@ -40,7 +42,7 @@ export default function LoginPage() {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Identifiants incorrects');
+      setError(err.message || t.common.error);
     } finally {
       setLoading(false);
     }
@@ -293,7 +295,7 @@ export default function LoginPage() {
 
           {/* Top tag */}
           <div className="left-fade relative z-10">
-            <div className="left-panel-tag">Plateforme BDE & Orgas</div>
+            <div className="left-panel-tag">{t.auth.login.leftTag}</div>
           </div>
 
           {/* Center content */}
@@ -307,7 +309,7 @@ export default function LoginPage() {
                 display: 'block',
                 marginBottom: '16px'
               }}>
-                — Événementiel Étudiant
+                {t.auth.login.leftSub}
               </span>
               <h1
                 className="neon-glow klub-font"
@@ -327,7 +329,7 @@ export default function LoginPage() {
             </div>
 
             <p style={{ color: '#6B6B6B', fontSize: '15px', lineHeight: 1.6, maxWidth: '340px' }}>
-              La plateforme intercommunautaire pour connecter les BDE et les organisateurs d'événements.
+              {t.auth.login.leftDesc}
             </p>
           </div>
 
@@ -340,11 +342,7 @@ export default function LoginPage() {
               background: '#1A1A1A',
               border: '1px solid #1A1A1A',
             }}>
-              {[
-                { val: '200+', label: 'BDE' },
-                { val: '1.2k', label: 'Prestataires' },
-                { val: '4.8★', label: 'Note moyenne' },
-              ].map((stat) => (
+              {t.auth.login.stats.map((stat) => (
                 <div key={stat.label} style={{ background: '#000', padding: '16px 20px' }}>
                   <div className="klub-font" style={{ fontSize: '20px', fontWeight: 800, color: '#fff' }}>{stat.val}</div>
                   <div style={{ fontSize: '10px', letterSpacing: '0.1em', color: '#6B6B6B', textTransform: 'uppercase', marginTop: '2px' }}>{stat.label}</div>
@@ -382,10 +380,10 @@ export default function LoginPage() {
             {/* Heading */}
             <div className="fade-up-1 mb-10">
               <h2 className="klub-font" style={{ fontSize: '28px', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '6px' }}>
-                Connexion
+                {t.auth.login.title}
               </h2>
               <p style={{ fontSize: '13px', color: '#6B6B6B' }}>
-                Accédez à votre espace KLUB
+                {t.auth.login.subtitle}
               </p>
             </div>
 
@@ -409,14 +407,14 @@ export default function LoginPage() {
 
               {/* Email */}
               <div className="field-wrap fade-up-2">
-                <label className="field-label" htmlFor="email">Email</label>
+                <label className="field-label" htmlFor="email">{t.auth.login.email}</label>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="underline-input"
-                  placeholder="votre@email.fr"
+                  placeholder={t.auth.login.emailPlaceholder}
                   required
                   autoComplete="email"
                 />
@@ -424,14 +422,14 @@ export default function LoginPage() {
 
               {/* Password */}
               <div className="field-wrap fade-up-3">
-                <label className="field-label" htmlFor="password">Mot de passe</label>
+                <label className="field-label" htmlFor="password">{t.auth.login.password}</label>
                 <input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="underline-input"
-                  placeholder="••••••••"
+                  placeholder={t.auth.login.passwordPlaceholder}
                   required
                   autoComplete="current-password"
                 />
@@ -449,9 +447,9 @@ export default function LoginPage() {
                         display: 'inline-block',
                         animation: 'spin 0.6s linear infinite',
                       }} />
-                      Connexion...
+                      {t.auth.login.submitting}
                     </span>
-                  ) : 'Se connecter →'}
+                  ) : t.auth.login.submit}
                 </button>
               </div>
             </form>
@@ -459,34 +457,28 @@ export default function LoginPage() {
             {/* Footer */}
             <div className="fade-up-5" style={{ marginTop: '32px', paddingTop: '24px', borderTop: '1px solid #1A1A1A' }}>
               <p style={{ fontSize: '13px', color: '#6B6B6B', textAlign: 'center', marginBottom: '16px' }}>
-                Pas encore de compte ?{' '}
+                {t.auth.login.noAccount}{' '}
                 <Link
                   href="/signup"
                   style={{ color: '#7C3AED', fontWeight: 700, textDecoration: 'none' }}
                   onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
                   onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
                 >
-                  S'inscrire
+                  {t.auth.login.signup}
                 </Link>
               </p>
 
-              {/* Dev bypass */}
-              <div style={{ display: 'flex', gap: '8px' }}>
+              {/* Language toggle */}
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
                 <button
-                  onClick={() => { localStorage.setItem('dev_authenticated', 'true'); localStorage.setItem('dev_user', JSON.stringify({ id: 'dev-bde', name: 'Alex BDE', role: 'BDE', organization_name: 'BDE Polytechnique', email: 'bde@dev.fr' })); router.push('/bde/dashboard'); }}
-                  style={{ flex: 1, padding: '8px', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', background: 'transparent', border: '1px solid #1A1A1A', color: '#444', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = '#333')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#1A1A1A')}
+                  onClick={() => setLang(lang === 'fr' ? 'en' : 'fr')}
+                  style={{ padding: '6px 14px', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', background: 'transparent', border: '1px solid #1A1A1A', color: '#444', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s, color 0.2s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#7C3AED'; (e.currentTarget as HTMLButtonElement).style.color = '#7C3AED'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = '#1A1A1A'; (e.currentTarget as HTMLButtonElement).style.color = '#444'; }}
                 >
-                  Dev → BDE
-                </button>
-                <button
-                  onClick={() => { localStorage.setItem('dev_authenticated', 'true'); localStorage.setItem('dev_user', JSON.stringify({ id: 'dev-orga', name: 'Sam Orga', role: 'ORGA', organization_name: 'SoundPro Events', email: 'orga@dev.fr' })); router.push('/projects'); }}
-                  style={{ flex: 1, padding: '8px', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', background: 'transparent', border: '1px solid #1A1A1A', color: '#444', cursor: 'pointer', fontFamily: 'inherit', transition: 'border-color 0.2s' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = '#333')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = '#1A1A1A')}
-                >
-                  Dev → ORGA
+                  <span style={{ color: lang === 'fr' ? '#fff' : '#555' }}>FR</span>
+                  {' / '}
+                  <span style={{ color: lang === 'en' ? '#fff' : '#555' }}>EN</span>
                 </button>
               </div>
             </div>
