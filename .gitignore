@@ -48,3 +48,9 @@ dev.log
 *.tsbuildinfo
 next-env.d.ts
 .claude/settings.local.json
+
+# projet distinct déposé dans le dossier, hors périmètre KLUB
+/pixel-agents
+
+# worktrees de travail
+.claude/worktrees/

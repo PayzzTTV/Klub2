@@ -17,8 +17,17 @@ const config: Config = {
     '**/?(*.)+(spec|test).[jt]s?(x)',
   ],
 
-  // Exclure node_modules et .next
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/'],
+  // Exclure node_modules, .next, et les arborescences étrangères au projet.
+  // `pixel-agents/` est un projet distinct déposé dans le dossier, et
+  // `.claude/worktrees/` contient des copies de travail : les deux faisaient
+  // échouer la suite et rendaient le signal des tests inexploitable — or la CI
+  // bloque désormais le build sur les tests.
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/.next/',
+    '<rootDir>/pixel-agents/',
+    '<rootDir>/.claude/',
+  ],
 
   // Coverage
   collectCoverageFrom: [

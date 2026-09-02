@@ -24,6 +24,8 @@ const eslintConfig = [
       '*.config.mjs',
       'seed-*.js',
       'test-*.js',
+      'pixel-agents/**',
+      '.claude/**',
     ],
   },
   {

@@ -2,13 +2,12 @@
 
 import Link from 'next/link';
 import { Syne } from 'next/font/google';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLanguage } from '@/lib/hooks/useLanguage';
 
 const syne = Syne({ subsets: ['latin'], weight: ['400', '700', '800'] });
 
 export default function Home() {
-  const tickerRef = useRef<HTMLDivElement>(null);
   const [scrollY, setScrollY] = useState(0);
   const { lang, setLang, t } = useLanguage();
 

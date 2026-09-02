@@ -67,8 +67,8 @@ export default function SettingsPage() {
       if (error) throw error;
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de la mise à jour');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de la mise à jour');
     } finally {
       setLoading(false);
     }

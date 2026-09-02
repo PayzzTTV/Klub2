@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useLanguage } from '@/lib/hooks/useLanguage';
 
 type UserProfile = {
   id: string;

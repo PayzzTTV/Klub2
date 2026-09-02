@@ -70,7 +70,6 @@ export default function CreateProjectPage() {
       return;
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projectData = {
       title: formData.title,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

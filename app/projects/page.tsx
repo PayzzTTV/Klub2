@@ -5,14 +5,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getPublishedProjects, ProjectWithProfile } from '@/lib/utils/projects';
-import { useLanguage } from '@/lib/hooks/useLanguage';
 
 export default function DemoProjectsPage() {
   const router = useRouter();
   const supabase = createClient();
   const [projects, setProjects] = useState<ProjectWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(true);
 
   const [filters, setFilters] = useState({
     type: 'all',
@@ -24,90 +22,6 @@ export default function DemoProjectsPage() {
 
   const [sortBy, setSortBy] = useState<'date' | 'budget' | 'capacity'>('date');
 
-  // Mock data for demo mode
-  const mockProjects = [
-    {
-      id: '1',
-      title: 'Gala de fin d\'année 2026',
-      type: 'Gala' as const,
-      budget: 15000,
-      capacity: 500,
-      location: 'Paris',
-      start_date: '2026-06-15',
-      end_date: '2026-06-15',
-      description: 'Grand gala de fin d\'année avec 500 personnes. Besoin de prestataires son, lumière et DJ.',
-      bde_id: 'mock-bde-1',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE ESSEC',
-        organization_name: 'ESSEC Business School',
-      },
-    },
-    {
-      id: '2',
-      title: 'Festival Campus Summer',
-      type: 'Festival' as const,
-      budget: 25000,
-      capacity: 1000,
-      location: 'Lyon',
-      start_date: '2026-05-20',
-      end_date: '2026-05-22',
-      description: 'Festival outdoor sur 2 jours avec plusieurs scènes.',
-      bde_id: 'mock-bde-2',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE EM Lyon',
-        organization_name: 'EM Lyon Business School',
-      },
-    },
-    {
-      id: '3',
-      title: 'Soirée d\'intégration',
-      type: 'Soirée' as const,
-      budget: 8000,
-      capacity: 300,
-      location: 'Toulouse',
-      start_date: '2026-09-10',
-      end_date: '2026-09-10',
-      description: 'Soirée de rentrée pour accueillir les nouveaux étudiants.',
-      bde_id: 'mock-bde-3',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE Toulouse BS',
-        organization_name: 'Toulouse Business School',
-      },
-    },
-    {
-      id: '4',
-      title: 'Conférence Tech & Innovation',
-      type: 'Conférence' as const,
-      budget: 12000,
-      capacity: 200,
-      location: 'Paris',
-      start_date: '2026-04-05',
-      end_date: '2026-04-05',
-      description: 'Conférence avec speakers renommés. Besoin de matériel audiovisuel professionnel.',
-      bde_id: 'mock-bde-4',
-      status: 'published' as const,
-      feedback_given: false,
-      created_at: '2026-01-01',
-      updated_at: '2026-01-01',
-      bde_profile: {
-        name: 'BDE Télécom Paris',
-        organization_name: 'Télécom Paris',
-      },
-    },
-  ];
-
   const projectTypes = ['all', 'Gala', 'Soirée', 'Festival', 'Conférence', 'Autre'];
 
   // Load projects from Supabase
@@ -116,7 +30,6 @@ export default function DemoProjectsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
 
-      setIsDemo(false);
       const supabaseProjects = await getPublishedProjects(supabase, {
         type: filters.type,
         search: ''

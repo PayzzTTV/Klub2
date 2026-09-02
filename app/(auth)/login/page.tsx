@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
   const router = useRouter();
   const { t, lang, setLang } = useLanguage();
 
@@ -41,8 +40,8 @@ export default function LoginPage() {
           router.push('/projects');
         }
       }
-    } catch (err: any) {
-      setError(err.message || t.common.error);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.common.error);
     } finally {
       setLoading(false);
     }

@@ -38,6 +38,45 @@ jobs:
         run: npm run typecheck
 
   # ──────────────────────────────────────────
+  # JOB 1bis : Sécurité (CVE + secrets)
+  # KLB-09 : la CI ne comportait aucune étape de sécurité.
+  # ──────────────────────────────────────────
+  security:
+    name: Sécurité
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks a besoin de l'historique complet
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      # Bloque sur toute CVE haute/critique non explicitement acceptée.
+      # Les exceptions vivent dans le script, avec justification et date de
+      # réexamen — une exception périmée fait échouer la CI à son tour.
+      - name: Audit des dépendances
+        run: python3 scripts/check-dependencies.py
+
+      - name: Scan de secrets (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Refuse toute policy RLS qui ne serait pas restreinte à `authenticated`.
+      # Une instruction CREATE POLICY s'étend sur plusieurs lignes : on la lit
+      # jusqu'à son `;` avant de chercher la clause TO.
+      - name: Vérifier le cadrage des policies RLS
+        run: python3 scripts/check-rls-policies.py
+
+  # ──────────────────────────────────────────
   # JOB 2 : Tests automatisés
   # ──────────────────────────────────────────
   tests:
@@ -76,7 +115,7 @@ jobs:
   build:
     name: Build production
     runs-on: ubuntu-latest
-    needs: [quality, tests]
+    needs: [quality, security, tests]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

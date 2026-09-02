@@ -6,118 +6,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { getRentalItems, InventoryItemWithOwner } from '@/lib/utils/inventory';
-
-// Mock equipment data (fallback for demo mode)
-const mockEquipment = [
-  {
-    id: '1',
-    title: 'Système Son Professionnel 15kW',
-    category: 'Son',
-    owner: 'SoundTech Events',
-    ownerId: 'orga-1',
-    dailyPrice: 350,
-    quantity: 2,
-    available: true,
-    location: 'Paris',
-    image: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800',
-    description: 'Système de sonorisation professionnel avec enceintes, amplis et table de mixage',
-    specifications: {
-      puissance: '15kW',
-      capacite: '500 personnes',
-      configuration: '2x Sub + 4x Tops',
-    },
-  },
-  {
-    id: '2',
-    title: 'Pack Lumière LED RGB - 12 projecteurs',
-    category: 'Lumière',
-    owner: 'LightShow Pro',
-    ownerId: 'orga-2',
-    dailyPrice: 280,
-    quantity: 1,
-    available: true,
-    location: 'Lyon',
-    image: 'https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=800',
-    description: '12 projecteurs LED RGB avec console DMX et câblage complet',
-    specifications: {
-      type: 'LED RGB',
-      nombre: '12 projecteurs',
-      controle: 'Console DMX',
-    },
-  },
-  {
-    id: '3',
-    title: 'Caméra 4K + Stabilisateur',
-    category: 'Image',
-    owner: 'VideoMakers Studio',
-    ownerId: 'orga-3',
-    dailyPrice: 200,
-    quantity: 1,
-    available: true,
-    location: 'Paris',
-    image: 'https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=800',
-    description: 'Caméra 4K professionnelle avec gimbal stabilisateur et accessoires',
-    specifications: {
-      resolution: '4K 60fps',
-      stabilisateur: 'Gimbal 3 axes',
-      autonomie: '4h',
-    },
-  },
-  {
-    id: '4',
-    title: 'Barnums 3x3m - Lot de 4',
-    category: 'Logistique',
-    owner: 'EventPro',
-    ownerId: 'orga-4',
-    dailyPrice: 120,
-    quantity: 4,
-    available: true,
-    location: 'Marseille',
-    image: 'https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=800',
-    description: '4 barnums pliants 3x3m avec bâches, idéal pour stands extérieurs',
-    specifications: {
-      dimensions: '3x3m',
-      couleur: 'Blanc',
-      poids: '25kg/unité',
-    },
-  },
-  {
-    id: '5',
-    title: 'Console DJ Pioneer XDJ-RX3',
-    category: 'Son',
-    owner: 'DJ Collective',
-    ownerId: 'orga-5',
-    dailyPrice: 180,
-    quantity: 1,
-    available: true,
-    location: 'Paris',
-    image: 'https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=800',
-    description: 'Console DJ all-in-one professionnelle avec écran tactile',
-    specifications: {
-      modele: 'Pioneer XDJ-RX3',
-      canaux: '4 decks',
-      connectivite: 'USB, Rekordbox',
-    },
-  },
-  {
-    id: '6',
-    title: 'Écran LED Géant 3x2m',
-    category: 'Image',
-    owner: 'ScreenTech',
-    ownerId: 'orga-6',
-    dailyPrice: 450,
-    quantity: 1,
-    available: false,
-    location: 'Lyon',
-    image: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=800',
-    description: 'Écran LED géant modulaire pour événements outdoor/indoor',
-    specifications: {
-      dimensions: '3x2m',
-      resolution: 'Full HD',
-      luminosite: '5000 nits',
-    },
-  },
-];
+import type { InventoryCategory } from '@/types';
 
 const categories = ['Tous', 'Son', 'Image', 'Lumière', 'Logistique'];
 
@@ -129,27 +18,16 @@ export default function DemoRentalPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [equipment, setEquipment] = useState<InventoryItemWithOwner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isDemo, setIsDemo] = useState(true);
 
   useEffect(() => {
     async function loadEquipment() {
       setLoading(true);
 
-      // Dev mode bypass
-      const devAuth = typeof window !== 'undefined' && localStorage.getItem('dev_authenticated') === 'true';
-      if (devAuth) {
-        setIsDemo(true);
-        setEquipment([]);
-        setLoading(false);
-        return;
-      }
-
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
 
-      setIsDemo(false);
       const items = await getRentalItems(supabase, {
-        category: selectedCategory === 'Tous' ? undefined : selectedCategory as any,
+        category: selectedCategory === 'Tous' ? undefined : (selectedCategory as InventoryCategory),
         availableOnly: true,
       });
       setEquipment(items || []);
@@ -200,11 +78,9 @@ export default function DemoRentalPage() {
               Rental Hub
             </h1>
           </div>
-          {!isDemo && (
-            <Link href="/rental/create" className="k-btn whitespace-nowrap">
-              Ajouter du matériel
-            </Link>
-          )}
+          <Link href="/rental/create" className="k-btn whitespace-nowrap">
+            Ajouter du matériel
+          </Link>
         </div>
 
         {/* Search Bar */}
@@ -379,9 +255,7 @@ export default function DemoRentalPage() {
                 >
                   <Image
                     src={
-                      (isDemo
-                        ? (item as any).image
-                        : item.images?.[0]) ||
+                      item.images?.[0] ||
                       'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800'
                     }
                     alt={item.title}
@@ -469,7 +343,7 @@ export default function DemoRentalPage() {
                           lineHeight: 1,
                         }}
                       >
-                        {item.daily_price || (item as any).dailyPrice}€
+                        {item.daily_price}€
                       </span>
                       <span
                         style={{
@@ -502,9 +376,7 @@ export default function DemoRentalPage() {
                           color: '#E8E8E8',
                         }}
                       >
-                        {item.owner?.organization_name ||
-                          item.owner?.name ||
-                          (item as any).owner}
+                        {item.owner?.organization_name || item.owner?.name}
                       </span>
                     </div>
                   </div>
