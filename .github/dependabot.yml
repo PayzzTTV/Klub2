@@ -1,0 +1,36 @@
+# KLB-09 : aucune veille automatisée sur les dépendances n'était en place.
+# 16 vulnérabilités dont 12 hautes s'étaient accumulées sans alerte.
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
+      - security
+    groups:
+      # Les correctifs de sécurité arrivent seuls, pour être mergés vite
+      production-patches:
+        applies-to: version-updates
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      dev-dependencies:
+        applies-to: version-updates
+        dependency-type: development
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    labels:
+      - dependencies
+      - ci

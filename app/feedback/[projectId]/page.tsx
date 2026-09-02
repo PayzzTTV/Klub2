@@ -9,7 +9,6 @@ import { getProjectById } from '@/lib/utils/projects';
 import { createReview, canReview } from '@/lib/utils/reviews';
 import type { Project } from '@/types';
 import { useToast } from '@/lib/hooks/useToast';
-import { useLanguage } from '@/lib/hooks/useLanguage';
 
 export default function DemoFeedbackPage() {
   const router = useRouter();
@@ -157,15 +156,10 @@ export default function DemoFeedbackPage() {
         return;
       }
 
-      // Update project to mark feedback as given
-      const { error: updateError } = await supabase
-        .from('projects')
-        .update({ feedback_given: true })
-        .eq('id', projectId);
-
-      if (updateError) {
-        console.error('Error updating feedback_given flag:', updateError);
-      }
+      // KLB-05 : `feedback_given` était mis à jour ici, depuis le client, ce qui
+      // permettait de désarmer le verrou sans jamais ouvrir ce formulaire. Le
+      // drapeau est désormais posé par le trigger on_review_created, dans la
+      // même transaction que l'insertion de l'avis.
 
       toast.success('Feedback envoyé ! Vous pouvez maintenant créer de nouveaux projets.');
       router.push('/bde/dashboard');

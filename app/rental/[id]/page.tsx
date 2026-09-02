@@ -160,29 +160,30 @@ export default function RentalDetailPage() {
         (1000 * 60 * 60 * 24)
     ) + 1; // +1 pour inclure le jour de fin
 
-    const totalPrice = days * equipment.daily_price;
+    // Le montant facturé est calculé en base (KLB-04) ; `days` ne sert
+    // plus qu'à l'affichage du récapitulatif.
 
     setSubmitting(true);
 
     try {
-      const rental = await createRentalRequest(supabase, {
+      // Le propriétaire et le prix sont dérivés en base (KLB-04) : on ne les
+      // transmet plus, et on affiche le montant réellement enregistré.
+      const { rental, error: rentalError } = await createRentalRequest(supabase, {
         item_id: equipmentId,
         renter_id: currentUserId,
-        owner_id: equipment.owner_id,
         start_date: bookingData.startDate,
         end_date: bookingData.endDate,
-        total_price: totalPrice,
         message: bookingData.message,
       });
 
       if (!rental) {
-        toast.error('Erreur lors de l\'envoi de la demande.\n\nVeuillez vérifier:\n- Que vous êtes bien connecté\n- Que les dates sont valides\n- Que l\'équipement est disponible\n\nConsultez la console (F12) pour plus de détails.');
+        toast.error(rentalError ?? 'Erreur lors de l\'envoi de la demande.');
         setSubmitting(false);
         return;
       }
 
       toast.success(
-        `Demande de location envoyée!\n\nDurée: ${days} jour(s)\nTotal: ${totalPrice}€\n\nLe propriétaire recevra votre demande et vous contactera.`
+        `Demande de location envoyée!\n\nDurée: ${days} jour(s)\nTotal: ${rental.total_price}€\n\nLe propriétaire recevra votre demande et vous contactera.`
       );
 
       // Reset form

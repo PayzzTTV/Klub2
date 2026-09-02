@@ -21,7 +21,7 @@ export default function DemoBDEDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Use the pending feedback hook
-  const { pendingProjects, loading: feedbackLoading } = usePendingFeedback(supabase, userId);
+  const { pendingProjects } = usePendingFeedback(supabase, userId);
   const { t } = useLanguage();
 
   useEffect(() => {

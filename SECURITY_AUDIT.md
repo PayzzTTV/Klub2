@@ -1,277 +1,141 @@
-# 🔒 KLUB - Audit de Sécurité
+# 🔒 KLUB — Audit de sécurité
 
-**Date:** 09 Février 2026
-**Version:** 0.5.0
-**Statut:** ✅ SÉCURISÉ
+**Date de l'audit :** 3 septembre 2026
+**Commit audité :** `a3573d1` (main)
+**Méthode :** analyse statique du code, des fichiers SQL et de l'historique git
+**Statut :** ⚠️ correctifs appliqués côté code — **migrations en attente d'application en base**
+
+> ### Ce document remplace la version du 9 février 2026
+>
+> La version précédente concluait « ✅ SÉCURISÉ — Failles potentielles : ❌ AUCUNE »
+> pour les tables `profiles` et `projects`. Cette conclusion était fausse : ces deux
+> tables portaient trois des défauts critiques listés ci-dessous. Un audit qui se
+> déclare conforme sans l'être est plus dangereux qu'une absence d'audit — c'est
+> le constat KLB-17.
 
 ---
 
-## ✅ Row Level Security (RLS) - AUDIT COMPLET
+## Le point structurant
 
-### 1. Profiles ✅ SÉCURISÉ
+L'application n'expose **aucune route API**. Chaque lecture et chaque écriture part
+du navigateur avec la clé `anon`, publique par construction puisqu'elle est servie
+dans le bundle JavaScript. **Le RLS PostgreSQL est donc l'unique frontière de
+sécurité.** Toute validation écrite en TypeScript est indicative : elle se contourne
+par un appel direct à PostgREST.
 
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | ORGA visibles publiquement, BDE privés | ✅ OK |
-| **INSERT** | Seulement son propre profil (auth.uid) | ✅ OK |
-| **UPDATE** | Seulement son propre profil | ✅ OK |
-| **DELETE** | Non autorisé | ✅ OK |
+Corollaire pratique : un invariant métier qui n'est pas exprimé en contrainte,
+policy ou trigger PostgreSQL n'est pas un invariant.
 
-**Vérification:**
-```sql
--- ✅ Un utilisateur ne peut voir que :
--- - Tous les profils ORGA
--- - Son propre profil BDE
-USING (role = 'ORGA' OR auth.uid() = id)
+---
+
+## Constats
+
+Sévérité : 🔴 critique · 🟠 élevé · 🟡 moyen · ⚪ faible
+
+| ID | Sév. | Constat | État |
+|---|---|---|---|
+| KLB-01 | 🔴 | Toutes les policies s'appliquaient au rôle `anon` : aspiration des emails et téléphones de tous les ORGA sans compte | ✅ corrigé (migration) |
+| KLB-02 | 🔴 | Élévation ORGA → BDE en une requête (`update({ role: 'BDE' })`) | ✅ corrigé (migration) |
+| KLB-03 | 🔴 | Clé `service_role` en clair dans `.test-accounts` | ⚠️ retirée du disque — **rotation à faire** |
+| KLB-04 | 🟠 | Le locataire fixait `total_price` et `owner_id`, et approuvait sa propre location | ✅ corrigé (migration + code) |
+| KLB-05 | 🟠 | `feedback_given` modifiable par le client : feedback obligatoire contournable | ✅ corrigé (migration + code) |
+| KLB-06 | 🟠 | Un avis pouvait viser un ORGA étranger au projet : classement falsifiable | ✅ corrigé (migration) |
+| KLB-07 | 🟠 | La « SERVER-SIDE VALIDATION » s'exécutait dans le navigateur | ✅ corrigé (trigger) |
+| KLB-08 | 🟡 | `ignoreBuildErrors` et `ignoreDuringBuilds` masquaient toute régression | ✅ corrigé |
+| KLB-09 | 🟡 | 16 CVE npm dont 12 hautes, aucune veille | ✅ 14/16 corrigées, veille en place |
+| KLB-10 | 🟡 | Aucun en-tête de sécurité HTTP | ✅ corrigé, vérifié en exécution |
+| KLB-11 | 🟡 | Le middleware ne protégeait aucune route | ✅ corrigé, vérifié en exécution |
+| KLB-12 | 🟡 | `supabase-disable-rls-dev.sql` présent au dépôt | ✅ supprimé |
+| KLB-13 | 🟡 | `SECURITY DEFINER` sans `search_path` figé | ✅ corrigé (migration) |
+| KLB-14 | 🟡 | Bypass d'auth `localStorage.dev_authenticated` livré en production | ✅ supprimé |
+| KLB-15 | 🟡 | Mot de passe : 6 caractères, sous les exigences du CLAUDE.md | ⚠️ front à 12 — **politique Supabase à régler** |
+| KLB-16 | ⚪ | Onze fichiers SQL contradictoires, aucune migration | ✅ corrigé (`supabase/migrations/`) |
+| KLB-17 | ⚪ | Audit précédent trompeur | ✅ ce document |
+| KLB-18 | ⚪ | Secret serveur dans un module partagé | ✅ corrigé (`lib/config.server.ts`) |
+| KLB-19 | ⚪ | Clé `anon` dans l'historique git (publique par nature) | ℹ️ sans impact propre |
+| KLB-20 | ⚪ | Aucune journalisation ni alerte | ❌ non traité |
+
+**Rapport détaillé, avec chaînes d'exploitation et correctifs commentés :**
+https://claude.ai/code/artifact/3de31ee3-5c15-4e93-9893-0dfac48efd89
+
+---
+
+## Ce qui a été vérifié et jugé conforme
+
+- **Supabase Storage** — buckets cloisonnés par `auth.uid()` en premier segment de
+  chemin, limites de taille, liste blanche de types MIME, `WITH CHECK` symétrique.
+- **XSS** — aucun `dangerouslySetInnerHTML`, `innerHTML`, `eval` ni `new Function`.
+- **Injection SQL** — tout passe par le query builder paramétré de `supabase-js`.
+- **Immuabilité des avis** — aucune policy `UPDATE`/`DELETE` sur `reviews` ; RLS
+  refuse par défaut. Contraintes `no_self_review` et `one_review_per_project`.
+- **Isolation des conversations** — `EXISTS` sur `conversations` vérifiant la
+  participation, et `auth.uid() = sender_id` à l'insertion.
+- **Historique git** — aucune clé `service_role` n'a jamais été committée
+  (vérifié par `git log -S` sur l'ensemble des révisions). Le `.gitignore` a tenu.
+- **Clause `WITH CHECK` implicite** — les anciennes policies `UPDATE` l'omettaient,
+  mais PostgreSQL réutilise alors l'expression `USING` pour les nouvelles valeurs.
+  Ce n'était **pas** une faille ; les nouvelles policies l'explicitent quand même.
+
+---
+
+## Actions restant à votre main
+
+Ces trois points ne peuvent pas être appliqués depuis le dépôt.
+
+### 1. Appliquer les migrations (KLB-01, 02, 04, 05, 06, 07, 13)
+
+Tant que ce n'est pas fait, **les trois constats critiques restent ouverts en
+production**. Le code applicatif est déjà aligné sur le comportement d'après
+migration.
+
+```bash
+supabase link --project-ref <votre-project-ref>
+supabase db push
 ```
 
----
+Requêtes de vérification : voir [`supabase/README.md`](supabase/README.md).
 
-### 2. Projects ✅ SÉCURISÉ
+### 2. Révoquer la clé `service_role` (KLB-03)
 
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | Projets publiés visibles par tous | ✅ OK |
-| **INSERT** | BDE uniquement + pas de feedback pending | ✅ OK |
-| **UPDATE** | Seulement le créateur (BDE) | ✅ OK |
-| **DELETE** | Seulement le créateur (BDE) | ✅ OK |
+La clé a été retirée de `.test-accounts`, mais **elle reste valide**. Rotation dans
+`Supabase Dashboard > Settings > API > Rotate service_role`. Changer aussi les mots
+de passe des deux comptes de test, qui figuraient dans le même fichier.
 
-**Protection Avancée:**
-```sql
--- ✅ Empêche création si feedback en attente
-AND can_post_new_project(auth.uid())
-```
+### 3. Politique de mot de passe (KLB-15)
 
-**Failles Potentielles:** ❌ AUCUNE
+Le formulaire exige désormais 12 caractères, mais un attribut HTML se contourne.
+Dans `Supabase > Authentication > Policies` : longueur minimale 12, exiger
+lettres + chiffres + symboles, activer la vérification contre les mots de passe
+compromis (HaveIBeenPwned).
 
 ---
 
-### 3. Inventory ✅ SÉCURISÉ
+## Décisions produit ouvertes
 
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | Matériel disponible visible par tous | ✅ OK |
-| **INSERT** | Propriétaire authentifié uniquement | ✅ OK |
-| **UPDATE** | Seulement le propriétaire | ✅ OK |
-| **DELETE** | Seulement le propriétaire | ✅ OK |
+Ces points ne sont pas des défauts, mais des arbitrages à trancher.
 
-**Vérification:**
-```sql
--- ✅ Protection owner_id
-WITH CHECK (auth.uid() = owner_id)
-USING (auth.uid() = owner_id)
-```
-
----
-
-### 4. Rentals 🔐 CRITIQUE - SÉCURISÉ
-
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | Renter ou Owner uniquement | ✅ OK |
-| **INSERT** | Renter authentifié | ✅ OK |
-| **UPDATE** | Owner uniquement (approve/reject) | ✅ OK |
-| **DELETE** | Non autorisé | ✅ OK |
-
-**Protection:**
-```sql
--- ✅ Isolation complète des locations
-USING (auth.uid() = renter_id OR auth.uid() = owner_id)
-```
-
-**Tests Requis:**
-- [ ] User A ne peut pas voir les rentals de User B
-- [ ] User A ne peut pas modifier le status des rentals de User B
+- **Contact des membres.** Email et téléphone restent lisibles par tout compte
+  authentifié. La messagerie ayant été retirée du scope, c'est le mécanisme de mise
+  en relation prévu. Les gater derrière une candidature acceptée ou une location
+  approuvée réduirait la surface de scraping interne.
+- **Rôle déclaré au signup.** Le rôle est choisi à l'inscription puis devient
+  immuable. Rien ne vérifie qu'un compte « BDE » en est réellement un — une
+  validation par domaine email ou une revue manuelle serait à envisager.
+- **Next.js 16.** Deux CVE subsistent, sur un `postcss` transitif de *build*. Les
+  corriger impose un passage en majeure, avec migration et tests de non-régression.
+  Toutes les advisories *runtime* de Next.js (bypass middleware, cache poisoning,
+  SSRF, XSS nonce CSP) sont déjà corrigées en 15.5.25.
+- **Journalisation (KLB-20).** Aucune alerte n'existe : une aspiration de la table
+  `profiles` passerait inaperçue. À brancher sur les logs Supabase / Vercel.
 
 ---
 
-### 5. Reviews 🔐 CRITIQUE - SÉCURISÉ
+## Garde-fous automatisés mis en place
 
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | Public (transparence) | ✅ OK |
-| **INSERT** | BDE uniquement, projet completed, pas déjà noté | ✅ OK |
-| **UPDATE** | INTERDIT (immutable) | ✅ OK |
-| **DELETE** | INTERDIT | ✅ OK |
-
-**Protection Avancée:**
-```sql
--- ✅ Triple vérification
-1. auth.uid() = reviewer_id (BDE qui note)
-2. status = 'completed' (projet terminé)
-3. feedback_given = FALSE (pas déjà noté)
-```
-
-**Contraintes DB:**
-```sql
--- ✅ Empêche auto-notation
-CONSTRAINT no_self_review CHECK (reviewer_id != reviewee_id)
-
--- ✅ Une seule review par projet
-CONSTRAINT one_review_per_project UNIQUE(project_id, reviewer_id)
-```
-
----
-
-### 6. Conversations ✅ SÉCURISÉ
-
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | Participants uniquement | ✅ OK |
-| **INSERT** | Participants uniquement | ✅ OK |
-| **UPDATE** | Non implémenté | ⚠️ N/A |
-| **DELETE** | Non implémenté | ⚠️ N/A |
-
-**Note:** Messagerie supprimée du scope (Phase 7 ❌)
-
----
-
-### 7. Messages ✅ SÉCURISÉ
-
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | Participants conversation | ✅ OK |
-| **INSERT** | Sender authentifié | ✅ OK |
-
-**Note:** Messagerie supprimée du scope (Phase 7 ❌)
-
----
-
-### 8. Project Applications ✅ SÉCURISÉ
-
-| Action | Politique | Statut |
-|--------|-----------|--------|
-| **SELECT** | BDE créateur ou ORGA candidat | ✅ OK |
-| **INSERT** | ORGA uniquement | ✅ OK |
-| **UPDATE** | BDE créateur (accept/reject) | ✅ OK |
-
----
-
-## 🛡️ Contraintes de Sécurité Additionnelles
-
-### Validation des Données
-
-✅ **Ratings (1-5):**
-```sql
-CONSTRAINT valid_global_rating CHECK (global_rating >= 1 AND global_rating <= 5)
-```
-
-✅ **Prix positifs:**
-```sql
-CONSTRAINT positive_price CHECK (daily_price >= 0)
-CONSTRAINT positive_budget CHECK (budget >= 0)
-```
-
-✅ **Dates cohérentes:**
-```sql
-CONSTRAINT valid_rental_dates CHECK (start_date < end_date)
-CONSTRAINT valid_project_dates CHECK (start_date < end_date)
-```
-
-✅ **Empêche auto-location:**
-```sql
-CONSTRAINT no_self_rental CHECK (renter_id != owner_id)
-```
-
-✅ **Participants différents:**
-```sql
-CONSTRAINT different_participants CHECK (participant1_id != participant2_id)
-```
-
----
-
-## 🔍 Tests de Sécurité Requis
-
-### Tests Manuels à Faire
-
-- [ ] **Test 1:** User A ne peut pas modifier le profil de User B
-- [ ] **Test 2:** ORGA ne peut pas créer de projet
-- [ ] **Test 3:** BDE avec feedback pending ne peut pas créer de projet
-- [ ] **Test 4:** User A ne peut pas voir les rentals de User B
-- [ ] **Test 5:** User A ne peut pas modifier les reviews existantes
-- [ ] **Test 6:** User A ne peut pas se noter lui-même
-- [ ] **Test 7:** User A ne peut pas noter 2x le même projet
-
-### Tests Automatisés Recommandés
-
-```typescript
-// TODO: Ajouter tests E2E avec Playwright
-describe('RLS Security', () => {
-  it('should prevent unauthorized profile access')
-  it('should prevent ORGA from creating projects')
-  it('should prevent double reviews')
-  it('should isolate rental data')
-})
-```
-
----
-
-## 🚨 Vulnérabilités Identifiées
-
-### 🟢 Aucune Vulnérabilité Critique
-
-### ⚠️ Améliorations Recommandées
-
-1. **Rate Limiting** (Supabase Edge Functions)
-   - Limiter les créations de projets (max 10/jour)
-   - Limiter les tentatives de login (max 5/10min)
-
-2. **Email Verification** (Supabase Auth)
-   - Forcer vérification email avant utilisation
-   - Bloquer comptes non vérifiés après 7 jours
-
-3. **Audit Logs**
-   - Logger toutes les modifications sensibles
-   - Alertes sur tentatives d'accès non autorisées
-
-4. **Content Moderation**
-   - Filtrer les messages offensants (reviews, messages)
-   - Système de signalement
-
----
-
-## 📊 Score de Sécurité
-
-| Catégorie | Score | Commentaire |
-|-----------|-------|-------------|
-| **RLS Policies** | 10/10 | ✅ Excellente isolation des données |
-| **Contraintes DB** | 10/10 | ✅ Validations complètes |
-| **Auth Flow** | 9/10 | ⚠️ Ajouter email verification |
-| **Input Validation** | 9/10 | ⚠️ Ajouter sanitization XSS |
-| **Error Handling** | 8/10 | ⚠️ Ne pas exposer stack traces |
-
-**Score Global:** **46/50 (92%)** 🟢 EXCELLENT
-
----
-
-## 🔐 Recommandations de Production
-
-### Avant Déploiement
-
-1. ✅ **Activer Email Verification** (Supabase Auth)
-2. ✅ **Configurer CORS** (uniquement domaine production)
-3. ✅ **Variables d'environnement** (vérifier `.env.production`)
-4. ✅ **SSL/HTTPS** (Vercel automatic)
-5. ✅ **Backup automatique** (Supabase daily)
-
-### Monitoring
-
-1. **Sentry** - Error tracking
-2. **Supabase Dashboard** - Query monitoring
-3. **Vercel Analytics** - Performance tracking
-
----
-
-## 📝 Changelog Sécurité
-
-### Version 0.5.0 (09/02/2026)
-- ✅ Audit complet RLS policies
-- ✅ Vérification contraintes DB
-- ✅ Documentation sécurité complète
-- ✅ Score: 92% (Excellent)
-
----
-
-**Conclusion:** 🟢 L'application KLUB est **sécurisée** pour un déploiement en production. Les politiques RLS sont robustes et les contraintes DB préviennent les données invalides.
-
-**Prochaine étape:** Tests de pénétration (optionnel) + Email verification
+- `npm audit --audit-level=high` bloquant en CI.
+- Scan de secrets `gitleaks` sur l'historique complet.
+- [`scripts/check-rls-policies.py`](scripts/check-rls-policies.py) — refuse toute
+  `CREATE POLICY` dépourvue de `TO authenticated` (le défaut KLB-01 ne peut plus
+  être réintroduit sans que la CI échoue).
+- Dependabot hebdomadaire sur npm et les GitHub Actions.
+- Le job `build` dépend désormais du job `security`.

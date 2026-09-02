@@ -2,105 +2,49 @@ import { SupabaseClient } from '@supabase/supabase-js';
 import { Rental, RentalStatus } from '@/types';
 
 /**
- * Create a new rental request
+ * Create a new rental request.
+ *
+ * KLB-04 / KLB-07 : cette fonction contenait un bloc commenté
+ * « SERVER-SIDE VALIDATION » qui s'exécutait en réalité dans le navigateur, et
+ * transmettait `owner_id` et `total_price` fournis par l'appelant — un locataire
+ * pouvait donc se louer un article à 0 EUR au nom de n'importe qui.
+ *
+ * Le propriétaire, le prix et la disponibilité sont désormais dérivés en base
+ * par le trigger `on_rental_created`. Les valeurs envoyées ici seraient de toute
+ * façon écrasées : on ne les envoie plus.
  */
 export async function createRentalRequest(
   supabase: SupabaseClient,
   requestData: {
     item_id: string;
     renter_id: string;
-    owner_id: string;
     start_date: string;
     end_date: string;
-    total_price: number;
     message?: string;
   }
-): Promise<Rental | null> {
+): Promise<{ rental: Rental | null; error: string | null }> {
   try {
-    // 1. Get item details (including quantity)
-    const { data: item, error: itemError } = await supabase
-      .from('inventory')
-      .select('quantity')
-      .eq('id', requestData.item_id)
-      .single();
-
-    if (itemError || !item) {
-      console.error('Error fetching item:', itemError);
-      return null;
-    }
-
-    // 2. SERVER-SIDE VALIDATION: Check for date conflicts and quantity availability
-    const { data: existingRentals, error: checkError } = await supabase
-      .from('rentals')
-      .select('start_date, end_date, status')
-      .eq('item_id', requestData.item_id)
-      .in('status', ['pending', 'approved', 'ongoing']);
-
-    if (checkError) {
-      console.error('Error checking existing rentals:', checkError);
-      return null;
-    }
-
-    if (existingRentals && existingRentals.length > 0) {
-      const start = new Date(requestData.start_date);
-      const end = new Date(requestData.end_date);
-
-      // Count concurrent rentals for the requested dates
-      const concurrentRentals = existingRentals.filter(rental => {
-        if (rental.status === 'cancelled') return false;
-
-        const rentalStart = new Date(rental.start_date);
-        const rentalEnd = new Date(rental.end_date);
-
-        // Check if dates overlap
-        return (start <= rentalEnd && end >= rentalStart);
-      });
-
-      const concurrentCount = concurrentRentals.length;
-
-      // Check if quantity is available
-      if (concurrentCount >= item.quantity) {
-        console.error('Insufficient quantity available:', {
-          requestedStart: requestData.start_date,
-          requestedEnd: requestData.end_date,
-          totalQuantity: item.quantity,
-          concurrentRentals: concurrentCount,
-          availableQuantity: item.quantity - concurrentCount
-        });
-        return null;
-      }
-    }
-
-    // If no conflict, create the rental
     const { data, error } = await supabase
       .from('rentals')
       .insert({
         item_id: requestData.item_id,
         renter_id: requestData.renter_id,
-        owner_id: requestData.owner_id,
         start_date: requestData.start_date,
         end_date: requestData.end_date,
-        total_price: requestData.total_price,
-        status: 'pending',
+        message: requestData.message ?? null,
       })
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating rental request:', {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        full: error
-      });
-      return null;
+      console.error('Error creating rental request:', error.message, error.code);
+      return { rental: null, error: error.message };
     }
 
-    return data as Rental;
+    return { rental: data as Rental, error: null };
   } catch (error) {
     console.error('Exception in createRentalRequest:', error);
-    return null;
+    return { rental: null, error: 'Erreur inattendue lors de la demande' };
   }
 }
 

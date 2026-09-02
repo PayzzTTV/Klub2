@@ -49,8 +49,8 @@ export default function SignupPage() {
         await new Promise(resolve => setTimeout(resolve, 1500));
         router.push(role === 'BDE' ? '/bde/dashboard' : '/projects');
       }
-    } catch (err: any) {
-      setError(err.message || 'Erreur lors de l\'inscription');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur lors de l\'inscription');
     } finally {
       setLoading(false);
     }
@@ -376,7 +376,7 @@ export default function SignupPage() {
                   id="password" type="password" value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="s-input" placeholder="••••••••"
-                  required minLength={6} autoComplete="new-password"
+                  required minLength={12} autoComplete="new-password"
                 />
                 <div style={{ fontSize: '10px', color: '#333', marginTop: '4px', letterSpacing: '0.05em' }}>
                   {t.auth.signup.passwordHint}
