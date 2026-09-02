@@ -29,6 +29,13 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+dev.log
+*.log
+
+# local dev / debug scripts (ne pas versionner : contiennent des configs Supabase)
+/seed-projects-data.js
+/test-*.js
+.test-accounts
 
 # env files (can opt-in for committing if needed)
 .env*
